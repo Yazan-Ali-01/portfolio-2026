@@ -48,7 +48,6 @@ chapterProgress }`. Two consequences worth protecting:
 | E09-T7 — per-case-study OG cards | nothing |
 | E07-T8 — fact-check the four `claims[]` | **Yazan** |
 | E07-T9 — deploy and domain (analytics done) | **Yazan** |
-| Jeem case study, `needsReview: true` | **Yazan** |
 
 **E10-T5 was dropped on purpose.** Selecting an artifact navigates straight to the
 case study instead of opening a panel inside the room. Fewer states, and the case

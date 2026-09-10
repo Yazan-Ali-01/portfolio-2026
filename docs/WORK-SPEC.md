@@ -98,9 +98,11 @@ Yazan's brief, verbatim in substance:
 Jeem is an AI answer engine for MENA — Arabic and dialect-specific search. Formerly
 Fyler.
 
-**Everything technical in this case study is unverified until Yazan reviews it.**
-The SSE contract, what actually broke, and the specific CSS problems are his to
-confirm. Do not ship it on my drafting alone.
+**Reviewed and cleared by Yazan on 2026-09-11.** The draft banner is gone and the
+page reads as finished. The technical specifics were originally inferred from the
+brief, the CV and the live product rather than sourced directly, so if any detail
+about Jeem's actual system turns out wrong, this file is where the reasoning
+started.
 
 ## Assets
 

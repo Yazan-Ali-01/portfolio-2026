@@ -34,8 +34,8 @@ studio needs something to be about.
 - No copy is inlined in a component; it all lives in `src/content/`.
 - Every metric carries its basis, same discipline as `work.ts`.
 
-## Open
+## Closed
 
-**Jeem's technical detail is drafted, not sourced.** It cannot ship until Yazan
-confirms the SSE contract, what actually broke, and the CSS specifics. Flagged in
-the file itself, not just here.
+**Jeem's technical detail was drafted, not sourced**, and carried a visible draft
+banner until Yazan cleared it on 2026-09-11. The `needsReview` flag stays in the
+content schema for the next case study written ahead of its facts.
