@@ -63,6 +63,16 @@ regress quietly.
 browser stops counting it, `?analytics=on` resumes. Stored in localStorage, so it
 holds across the whole site.
 
+Two things about that, since localStorage is scoped per origin and per browser:
+
+- **Do it on the exact host you browse.** `analyticsHosts` lists both
+  `yazan-ali.net` and `www.yazan-ali.net`. If both actually serve the site rather
+  than one redirecting to the other, they are separate origins and each needs its
+  own opt-out visit.
+- **It is per browser profile.** Chrome, Safari and a phone each need their own
+  opt-out, and a private window starts clean every time. Clearing site data wipes
+  it too.
+
 **Events, and the question each one answers:**
 
 | Event | Question |

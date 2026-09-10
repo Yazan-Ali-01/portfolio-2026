@@ -16,7 +16,7 @@ export const meta = {
    * point it at a NEW project if you want this site's recordings kept separate
    * from the old one's. Empty string disables Clarity entirely.
    */
-  clarityId: 'ygc0lgib2k',
+  clarityId: 'ygcey64pbp',
   /**
    * Analytics run on these hosts and nowhere else. Not localhost, not preview
    * deployments, not a headless browser. Exact matches only.
