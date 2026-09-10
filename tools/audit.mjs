@@ -20,7 +20,7 @@ const ok = (c, m) => { console.log((c ? '  PASS  ' : '  FAIL  ') + m); if (!c) f
   // hunting, then another, matching the Feb-to-Apr 2023 gap on the CV.
   for (const s of ['Eighty-three percent', 'illiterate engineer', 'One month of hunting',
                    'Another month of hunting', 'arithmetic', 'propels any team to new heights',
-                   'why I became a software engineer', 'Latakia', 'CS50', 'This is what happened in between']) {
+                   'why I became a software engineer', 'Latakia · 2019', 'CS50', 'This is what happened in between']) {
     ok(text.includes(s), `story text present: "${s}"`);
   }
   ok(await page.locator('nav[aria-label="Chapters"] a').count() === 10, 'rail degrades to a 10-link table of contents');

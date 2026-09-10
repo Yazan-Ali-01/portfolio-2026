@@ -60,8 +60,15 @@ import { meta } from '../content/meta';
 
 <style>
   .masthead {
-    position: relative;
-    z-index: 1;
+    /*
+     * Absolute, not in flow. In flow it pushed the sticky stage down by its own
+     * height, so the canvas never reached the top of the viewport and the top of
+     * the tunnel was cut off.
+     */
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    z-index: 4;
     padding-block: var(--space-md) 0;
     display: flex;
     flex-wrap: wrap;

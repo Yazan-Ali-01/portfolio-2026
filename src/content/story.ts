@@ -23,7 +23,7 @@ export type Chapter =
       /**
        * Set on chapter 0 only. Place, and ideally the year — it is the first
        * fact a stranger meets and it is what stops the opening reading as a
-       * riddle. TODO: add the year, e.g. 'Latakia, Syria · 2018'.
+       * riddle.
        */
       dateline?: string;
       /** Set on chapter 0 only. The page's h1 and its LCP element. */
@@ -46,7 +46,7 @@ export const story: Chapter[] = [
     id: 'opening',
     index: 0,
     title: 'Opening',
-    dateline: `Latakia, Syria`,
+    dateline: `Latakia, Syria · 2019`,
     hero: `Eighty-three percent.`,
     paragraphs: [
       `That was my score. It decided what I was allowed to study, and it wasn’t enough for the thing I actually wanted.`,
