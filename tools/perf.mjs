@@ -1,7 +1,9 @@
 import { chromium } from 'playwright';
+import { blockAnalytics } from './_no-analytics.mjs';
 const URL = process.argv[2] || 'http://localhost:4331/';
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3 });
+  await blockAnalytics(ctx);
 const page = await ctx.newPage();
 
 // Slow 4G + 4x CPU slowdown, roughly a mid-range phone.

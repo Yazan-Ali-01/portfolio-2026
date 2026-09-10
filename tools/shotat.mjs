@@ -1,7 +1,10 @@
 import { chromium } from 'playwright';
+import { blockAnalytics } from './_no-analytics.mjs';
 const [url, out, y] = process.argv.slice(2);
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
+ await blockAnalytics(page);
+ await blockAnalytics(page);
 await page.goto(url, { waitUntil: 'networkidle' });
 await page.waitForTimeout(900);
 await page.evaluate(() => document.querySelector('astro-dev-toolbar')?.remove());

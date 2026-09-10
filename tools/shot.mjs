@@ -1,8 +1,11 @@
 import { chromium } from 'playwright';
+import { blockAnalytics } from './_no-analytics.mjs';
 const url = process.argv[2] || 'http://localhost:4321/';
 const out = process.argv[3] || '/tmp/shots';
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
+ await blockAnalytics(page);
+ await blockAnalytics(page);
 const errors = [];
 page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
 page.on('pageerror', e => errors.push('PAGEERROR ' + e.message));

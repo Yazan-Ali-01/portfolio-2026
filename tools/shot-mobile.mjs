@@ -1,6 +1,9 @@
 import { chromium } from 'playwright';
+import { blockAnalytics } from './_no-analytics.mjs';
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+ await blockAnalytics(page);
+ await blockAnalytics(page);
 await page.goto('http://localhost:4321/', { waitUntil: 'networkidle' });
 await page.waitForTimeout(1200);
 const total = await page.evaluate(() => document.body.scrollHeight);

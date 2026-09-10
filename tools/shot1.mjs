@@ -1,7 +1,10 @@
 import { chromium } from 'playwright';
+import { blockAnalytics } from './_no-analytics.mjs';
 const [url, out, mode] = process.argv.slice(2);
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
+ await blockAnalytics(page);
+ await blockAnalytics(page);
 const errs = [];
 page.on('pageerror', e => errs.push(e.message));
 await page.goto(url, { waitUntil: 'networkidle' });

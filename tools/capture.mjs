@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { blockAnalytics } from './_no-analytics.mjs';
 import { mkdirSync } from 'node:fs';
 
 const targets = [
@@ -10,6 +11,7 @@ mkdirSync('shots/work', { recursive: true });
 const browser = await chromium.launch();
 for (const t of targets) {
   const page = await browser.newPage({ viewport: { width: t.w, height: t.h }, deviceScaleFactor: 2 });
+  await blockAnalytics(page);
   try {
     await page.goto(t.url, { waitUntil: 'networkidle', timeout: 45000 });
     await page.waitForTimeout(3500);

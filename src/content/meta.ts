@@ -17,6 +17,11 @@ export const meta = {
    * from the old one's. Empty string disables Clarity entirely.
    */
   clarityId: 'ygc0lgib2k',
+  /**
+   * Analytics run on these hosts and nowhere else. Not localhost, not preview
+   * deployments, not a headless browser. Exact matches only.
+   */
+  analyticsHosts: ['yazan-ali.net', 'www.yazan-ali.net'],
   credential: 'AWS Certified Solutions Architect, Associate',
   knowsAbout: [
     'Multi-tenant architecture',

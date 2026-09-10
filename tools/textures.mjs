@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { blockAnalytics } from './_no-analytics.mjs';
 import { readFileSync } from 'node:fs';
 
 /**
@@ -32,6 +33,7 @@ for (const job of jobs) {
   const WIDTH = job.width ?? DEFAULT_WIDTH;
   const data = readFileSync(job.src).toString('base64');
   const page = await browser.newPage({ viewport: { width: WIDTH, height: 768 } });
+  await blockAnalytics(page);
   await page.setContent(
     `<style>html,body{margin:0;background:#0B0B0C}` +
       `img{display:block;width:${WIDTH}px;height:auto}</style>` +

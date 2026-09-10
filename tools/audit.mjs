@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import { blockAnalytics } from './_no-analytics.mjs';
 const BASE = (process.argv[2] || 'http://localhost:4321/').replace(/\/$/, '');
 const URL = BASE + '/story';
 const browser = await chromium.launch();
@@ -8,6 +9,7 @@ const ok = (c, m) => { console.log((c ? '  PASS  ' : '  FAIL  ') + m); if (!c) f
 // --- 1. No JavaScript at all -------------------------------------------------
 {
   const ctx = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 1440, height: 900 } });
+  await blockAnalytics(ctx);
   const page = await ctx.newPage();
   await page.goto(URL, { waitUntil: 'domcontentloaded' });
   // innerText omits collapsed <details>, so read the DOM: native <details> opens
@@ -31,6 +33,7 @@ const ok = (c, m) => { console.log((c ? '  PASS  ' : '  FAIL  ') + m); if (!c) f
 // --- 2. Reduced motion -------------------------------------------------------
 {
   const ctx = await browser.newContext({ reducedMotion: 'reduce', viewport: { width: 1440, height: 900 } });
+  await blockAnalytics(ctx);
   const page = await ctx.newPage();
   const requested = [];
   page.on('request', r => requested.push(r.url()));
@@ -47,6 +50,7 @@ const ok = (c, m) => { console.log((c ? '  PASS  ' : '  FAIL  ') + m); if (!c) f
 console.log('\nBreakpoints');
 for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
   const ctx = await browser.newContext({ viewport: { width: w, height: 900 } });
+  await blockAnalytics(ctx);
   const page = await ctx.newPage();
   await page.goto(BASE + '/', { waitUntil: 'networkidle' });
   const gateOver = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
@@ -61,6 +65,7 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
 // --- 3b. The gate and the work routes ---------------------------------------
 {
   const ctx = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 1440, height: 900 } });
+  await blockAnalytics(ctx);
   const page = await ctx.newPage();
   console.log('\nGate and work routes (no JavaScript)');
   await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
@@ -102,9 +107,26 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
   await ctx.close();
 }
 
+// --- 3c. No analytics off the production host -------------------------------
+{
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  const beacons = [];
+  await page.route(/clarity\.ms|\/_vercel\/(insights|speed-insights)/, (r) => {
+    beacons.push(r.request().url());
+    return r.abort();
+  });
+  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(3500);
+  console.log('\nAnalytics containment');
+  ok(beacons.length === 0, `no analytics beacons off the production host (${beacons.length})`);
+  await ctx.close();
+}
+
 // --- 4. Semantics and keyboard ----------------------------------------------
 {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await blockAnalytics(ctx);
   const page = await ctx.newPage();
   await page.goto(URL, { waitUntil: 'networkidle' });
   await page.waitForTimeout(800);

@@ -1,43 +1,53 @@
 import { chromium } from 'playwright';
 
 /**
- * Verifies the analytics contract: nothing before first paint, everything after
- * idle, events actually fire, and the opt-out switch really excludes.
+ * The analytics contract. Deliberately does NOT import _no-analytics.mjs — its
+ * job is to exercise the loader. Every outbound request is aborted at the
+ * browser, so the requests are counted but nothing reaches Clarity or Vercel.
+ *
+ * `?analytics=force` is what lets the loader run at all on localhost: the site
+ * otherwise refuses to run analytics off its production hosts.
  */
 const BASE = process.argv[2] || 'http://localhost:4331';
 const browser = await chromium.launch();
 const fail = [];
 const ok = (c, m) => { console.log((c ? '  PASS  ' : '  FAIL  ') + m); if (!c) fail.push(m); };
+const BEACON = /clarity\.ms|\/_vercel\/(insights|speed-insights)/;
 
-const watch = (page) => {
-  const hits = [];
-  page.on('request', r => {
-    const u = r.url();
-    if (/_vercel\/insights|_vercel\/speed-insights|clarity\.ms/.test(u)) hits.push(u);
-  });
-  return hits;
-};
-
-// --- 1. nothing fetched before LCP ------------------------------------------
-{
+async function newPage() {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
-  const hits = watch(page);
-  await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
-  const atPaint = hits.length;
+  const hits = [];
+  // Count the attempt, then kill it. Nothing leaves this machine.
+  await page.route(BEACON, (route) => { hits.push(route.request().url()); return route.abort(); });
+  return { ctx, page, hits };
+}
+
+// --- 1. the default: a non-production host must count nothing ---------------
+{
+  const { ctx, page, hits } = await newPage();
+  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
   await page.waitForTimeout(4000);
-  console.log('\nLoading order');
-  ok(atPaint === 0, `nothing analytics-related fetched at DOMContentLoaded (${atPaint})`);
-  ok(hits.length >= 1, `analytics fetched once idle (${hits.length} requests)`);
+  console.log('\nOff the production host');
+  ok(hits.length === 0, `localhost loads no analytics at all (${hits.length} requests)`);
   await ctx.close();
 }
 
-// --- 2. events fire ----------------------------------------------------------
+// --- 2. forced: loads, but only after idle ----------------------------------
 {
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-  const page = await ctx.newPage();
-  // Stub `va` into sessionStorage: clicking a door navigates, and anything held
-  // in a page variable dies with the document before it can be read.
+  const { ctx, page, hits } = await newPage();
+  await page.goto(BASE + '/?analytics=force', { waitUntil: 'domcontentloaded' });
+  const atPaint = hits.length;
+  await page.waitForTimeout(4000);
+  console.log('\nLoading order (forced)');
+  ok(atPaint === 0, `nothing fetched at DOMContentLoaded (${atPaint})`);
+  ok(hits.length >= 1, `fetched once idle (${hits.length} requests)`);
+  await ctx.close();
+}
+
+// --- 3. events carry their properties ---------------------------------------
+{
+  const { ctx, page } = await newPage();
   await page.addInitScript(() => {
     window.va = (...a) => {
       const log = JSON.parse(sessionStorage.getItem('__ev') ?? '[]');
@@ -45,32 +55,28 @@ const watch = (page) => {
       sessionStorage.setItem('__ev', JSON.stringify(log));
     };
   });
-  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
-  await page.waitForTimeout(500);
+  await page.goto(BASE + '/?analytics=force', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(400);
   await page.locator('a[data-ev="gate_choice"][data-ev-door="work"]').click();
   await page.waitForLoadState('domcontentloaded');
   const events = await page.evaluate(() => JSON.parse(sessionStorage.getItem('__ev') ?? '[]'));
+  const gate = events.find((e) => e[0] === 'event' && e[1]?.name === 'gate_choice');
   console.log('\nEvents');
-  const gate = events.find(e => e[0] === 'event' && e[1]?.name === 'gate_choice');
-  ok(!!gate, `gate_choice fires with the door recorded (${gate ? JSON.stringify(gate[1]) : 'none'})`);
+  ok(!!gate, `gate_choice carries its door (${gate ? JSON.stringify(gate[1]) : 'none'})`);
   await ctx.close();
 }
 
-// --- 3. opt-out really excludes ---------------------------------------------
+// --- 4. self-exclusion beats the force flag ---------------------------------
 {
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-  const page = await ctx.newPage();
-  const hits = watch(page);
+  const { ctx, page, hits } = await newPage();
   await page.goto(BASE + '/?analytics=off', { waitUntil: 'networkidle' });
-  await page.waitForTimeout(3500);
-  const afterOptOut = hits.length;
-  await page.goto(BASE + '/story', { waitUntil: 'networkidle' });
-  await page.waitForTimeout(3500);
+  await page.goto(BASE + '/?analytics=force', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(4000);
   console.log('\nSelf-exclusion');
-  ok(afterOptOut === 0, `?analytics=off loads nothing (${afterOptOut})`);
-  ok(hits.length === 0, `exclusion persists to the next page (${hits.length})`);
+  ok(hits.length === 0, `?analytics=off wins over ?analytics=force (${hits.length})`);
 
   await page.goto(BASE + '/?analytics=on', { waitUntil: 'networkidle' });
+  await page.goto(BASE + '/?analytics=force', { waitUntil: 'networkidle' });
   await page.waitForTimeout(4000);
   ok(hits.length > 0, `?analytics=on resumes counting (${hits.length})`);
   await ctx.close();

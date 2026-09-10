@@ -1,6 +1,9 @@
 import { chromium } from 'playwright';
+import { blockAnalytics } from './_no-analytics.mjs';
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 2 });
+ await blockAnalytics(page);
+ await blockAnalytics(page);
 await page.goto((process.argv[2] || 'http://localhost:4321') + '/og', { waitUntil: 'networkidle' });
 await page.waitForTimeout(800);
 // Astro scopes component <style>, so the dev toolbar can't be hidden from inside

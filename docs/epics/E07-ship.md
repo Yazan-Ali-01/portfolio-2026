@@ -43,6 +43,22 @@ and the audit asserted exactly that. It now ships a small deferred module, so th
 assertion is "no render-blocking scripts": every executable script must be a
 module or explicitly defer/async. LCP is unchanged.
 
+**Analytics only run on the real site.** Three independent gates, added after
+test traffic from the browser tooling reached Clarity before launch:
+
+1. **Host allowlist** — `meta.analyticsHosts`. Localhost and preview deployments
+   count nothing. This is the one that actually prevents the mistake.
+2. **`navigator.webdriver`** — Playwright, Puppeteer and Selenium all set it.
+3. **Request blocking in the tools** — `tools/_no-analytics.mjs` opts the browser
+   out and aborts any beacon before it leaves the machine. Every browser tool
+   imports it except `analytics-check.mjs`, whose job is to exercise the loader.
+
+`?analytics=force` bypasses gates 1 and 2 for one tab so the loader can be tested
+locally. It never beats self-exclusion, and it does not persist.
+
+`audit.mjs` now asserts that a local run sends zero beacons, so this cannot
+regress quietly.
+
 **Self-exclusion** carries over from the old site: `?analytics=off` once on a
 browser stops counting it, `?analytics=on` resumes. Stored in localStorage, so it
 holds across the whole site.

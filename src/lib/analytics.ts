@@ -8,9 +8,19 @@ import { meta } from '../content/meta';
  * visitor who leaves inside a second may not be counted, which is a bounce
  * rather than a reader.
  *
- * Self-exclusion: load any page with `?analytics=off` once on a browser to stop
- * counting your own visits there, and `?analytics=on` to resume. Stored per
- * browser in localStorage, so it survives across the whole site.
+ * Three independent gates, because one of them failing should not put test
+ * traffic into real analytics:
+ *
+ *   1. Host allowlist. Only `meta.analyticsHosts` count. Localhost, preview
+ *      deployments and anything else are silently excluded.
+ *   2. `navigator.webdriver`. Playwright, Puppeteer and Selenium all set it.
+ *   3. Self-exclusion: load any page with `?analytics=off` once on a browser to
+ *      stop counting your own visits there, `?analytics=on` to resume. Stored in
+ *      localStorage, so it survives across the whole site.
+ *
+ * `?analytics=force` bypasses gates 1 and 2 for the duration of the tab, so
+ * tools/analytics-check.mjs can exercise the loader locally. It never bypasses
+ * self-exclusion, and it does not persist.
  */
 
 type Props = Record<string, string | number | boolean>;
@@ -24,6 +34,7 @@ declare global {
 }
 
 const OPT_OUT_KEY = 'yz_optout';
+const FORCE_KEY = 'yz_force_analytics';
 const seen = new Set<string>();
 let excluded = false;
 
@@ -37,6 +48,23 @@ function resolveOptOut(): boolean {
     // Private windows and blocked storage both throw. Counting is the default.
     return false;
   }
+}
+
+/** True only on the real site, in a real browser. */
+function isCountableVisit(): boolean {
+  let forced = false;
+  try {
+    if (new URLSearchParams(location.search).get('analytics') === 'force') {
+      sessionStorage.setItem(FORCE_KEY, '1');
+    }
+    forced = sessionStorage.getItem(FORCE_KEY) === '1';
+  } catch {
+    /* storage can throw; forced stays false */
+  }
+  if (forced) return true;
+
+  if (navigator.webdriver) return false;
+  return (meta.analyticsHosts as readonly string[]).includes(location.hostname);
 }
 
 /** Fire an event. Safe to call before the scripts land — Vercel queues on `vaq`. */
@@ -130,7 +158,7 @@ export function trackDepth(label: string): void {
 }
 
 export function initAnalytics(): void {
-  excluded = resolveOptOut();
+  excluded = resolveOptOut() || !isCountableVisit();
   if (excluded) return;
 
   // Queue shim, so events fired before the scripts land are not lost.
