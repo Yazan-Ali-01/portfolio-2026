@@ -1,0 +1,88 @@
+---
+import { meta } from '../content/meta';
+
+/**
+ * The one piece of chrome on the site. Both worlds are always one click away,
+ * from anywhere inside either of them.
+ *
+ * It takes no palette of its own: the tokens resolve per world, so this renders
+ * rose-on-plum in the story and violet-on-black in the work without a branch.
+ */
+
+interface Props {
+  current: 'story' | 'work';
+  /** Appended after the world, for pages inside one — a case study name. */
+  trail?: string;
+}
+
+const { current, trail } = Astro.props;
+---
+
+<nav class="worlds" aria-label="Sections">
+  <a class="worlds__mark" href="/">{meta.name}</a>
+
+  <span class="worlds__set">
+    <a class="worlds__link" href="/story" aria-current={current === 'story' ? 'page' : undefined}>
+      The story
+    </a>
+    <a class="worlds__link" href="/work" aria-current={current === 'work' ? 'page' : undefined}>
+      The work
+    </a>
+  </span>
+
+  {
+    trail && (
+      <span class="worlds__trail">
+        <span aria-hidden="true">/</span> {trail}
+      </span>
+    )
+  }
+</nav>
+
+<style>
+  .worlds {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-xs) var(--space-sm);
+    /* --face-data only exists in the work world; the story falls back to Archivo. */
+    font-family: var(--face-data, var(--face-meta));
+    font-size: var(--text-xs);
+  }
+
+  .worlds__mark {
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .worlds__mark:hover {
+    color: var(--accent);
+  }
+
+  .worlds__set {
+    display: flex;
+    gap: var(--space-sm);
+  }
+
+  .worlds__link {
+    color: var(--ink-muted);
+    text-decoration: none;
+    padding-bottom: 3px;
+    border-bottom: 1px solid transparent;
+    transition: color 0.15s ease;
+  }
+
+  .worlds__link:hover {
+    color: var(--ink);
+  }
+
+  .worlds__link[aria-current='page'] {
+    color: var(--ink);
+    border-bottom-color: var(--accent);
+  }
+
+  .worlds__trail {
+    color: var(--ink-faint);
+  }
+</style>

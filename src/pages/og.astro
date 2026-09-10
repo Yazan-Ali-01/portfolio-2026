@@ -1,0 +1,99 @@
+---
+import Font from 'astro/components/Font.astro';
+import { meta } from '../content/meta';
+import '../styles/tokens.css';
+
+/**
+ * The OG card, rendered as a real page at exactly 1200x630 so it can be
+ * regenerated: `node tools/og.mjs`. Not part of the story; excluded from search.
+ */
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <title>OG card</title>
+    <Font cssVariable="--font-narrative" preload />
+    <Font cssVariable="--font-meta" />
+  </head>
+  <body>
+    <div class="card">
+      <p class="line">Eighty-three percent.</p>
+      <p class="sub">
+        That was my score, and it wasn’t enough. What happened next took six years.
+      </p>
+      <div class="foot">
+        <span class="name">{meta.name}</span>
+        <span class="role">{meta.role}, {meta.location}</span>
+      </div>
+    </div>
+
+    <style>
+      body {
+        margin: 0;
+        background: var(--ground);
+      }
+
+      /* base.css is not imported here, so box-sizing must be set locally or the
+         padding is added to the 1200x630 instead of sitting inside it. */
+      .card,
+      .card * {
+        box-sizing: border-box;
+      }
+
+      .card {
+        width: 1200px;
+        height: 630px;
+        padding: 76px 88px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        gap: 26px;
+        background:
+          radial-gradient(ellipse 52% 120% at 88% 46%, rgba(244, 169, 76, 0.16), transparent 62%),
+          radial-gradient(ellipse 40% 90% at 88% 46%, rgba(143, 180, 232, 0.1), transparent 68%),
+          var(--ground);
+        color: var(--ink);
+      }
+
+      .line {
+        margin: 0;
+        font-family: var(--font-narrative), Georgia, serif;
+        font-weight: 600;
+        font-size: 104px;
+        line-height: 0.98;
+        letter-spacing: -0.03em;
+        max-width: 15ch;
+      }
+
+      .sub {
+        margin: 0;
+        font-family: var(--font-narrative), Georgia, serif;
+        font-size: 27px;
+        line-height: 1.5;
+        color: var(--ink-muted);
+        max-width: 40ch;
+      }
+
+      .foot {
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        margin-top: 22px;
+        padding-top: 26px;
+        border-top: 1px solid var(--line);
+        font-family: var(--font-meta), sans-serif;
+        font-size: 20px;
+      }
+
+      .name {
+        font-weight: 600;
+      }
+
+      .role {
+        color: var(--ink-muted);
+      }
+    </style>
+  </body>
+</html>

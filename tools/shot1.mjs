@@ -1,0 +1,12 @@
+import { chromium } from 'playwright';
+const [url, out, mode] = process.argv.slice(2);
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
+const errs = [];
+page.on('pageerror', e => errs.push(e.message));
+await page.goto(url, { waitUntil: 'networkidle' });
+await page.waitForTimeout(1200);
+await page.evaluate(() => document.querySelector('astro-dev-toolbar')?.remove());
+await page.screenshot({ path: out, fullPage: mode === 'full' });
+console.log(out, errs.length ? 'ERRORS: ' + errs.join(' | ') : 'ok');
+await browser.close();

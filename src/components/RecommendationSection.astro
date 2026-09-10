@@ -1,0 +1,81 @@
+---
+import { recommendations } from '../content/recommendations';
+
+interface Props {
+  id: string;
+  index: number;
+  title: string;
+}
+
+const { id, index, title } = Astro.props;
+---
+
+<section class="says" id={id} data-chapter={index}>
+  <div class="u-shell--story">
+    <h2 class="says__head">{title}</h2>
+
+    {
+      recommendations.map((rec) => (
+        <figure class="quote">
+          <blockquote class="quote__body">
+            {rec.display.map((p) => (
+              <p>{p}</p>
+            ))}
+          </blockquote>
+          <figcaption class="quote__by">
+            <span class="quote__author">{rec.author}</span>
+            <span>{rec.title}</span>
+            <span>
+              {rec.relationship}. {rec.date}.
+            </span>
+          </figcaption>
+        </figure>
+      ))
+    }
+  </div>
+</section>
+
+<style>
+  .says {
+    padding-block: var(--space-xl);
+  }
+
+  .says__head {
+    font-size: var(--text-chapter);
+    margin-bottom: var(--space-lg);
+  }
+
+  /* No carousel, no auto-rotation. Both quotes are on the page at once. */
+  .quote {
+    margin: 0 0 var(--space-xl);
+    max-width: var(--measure);
+  }
+
+  .quote:last-of-type {
+    margin-bottom: 0;
+  }
+
+  .quote__body {
+    margin: 0 0 var(--space-sm);
+    padding-left: var(--space-sm);
+    border-left: 1px solid var(--line);
+  }
+
+  .quote__body p:last-child {
+    margin-bottom: 0;
+  }
+
+  .quote__by {
+    display: grid;
+    gap: 0.15rem;
+    font-family: var(--face-meta);
+    font-size: var(--text-xs);
+    color: var(--ink-muted);
+    padding-left: calc(var(--space-sm) + 1px);
+  }
+
+  .quote__author {
+    color: var(--ink);
+    font-weight: 500;
+  }
+</style>

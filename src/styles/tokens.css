@@ -1,0 +1,101 @@
+/* ---------------------------------------------------------------------------
+   Two worlds, one token vocabulary.
+
+   The gate forks into two places that deliberately do not look alike:
+
+     [data-world="story"]  Oxblood  — deep plum, ivory, rose. Cinematic.
+     [data-world="work"]   Signal   — neutral black, violet, mono. Engineered.
+
+   Component CSS only ever names the tokens, never the values, so the same
+   component reads correctly in either world.
+   --------------------------------------------------------------------------- */
+
+:root {
+  /* --- shared: type scale ------------------------------------------------ */
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1.0625rem;
+  --text-lg: 1.3125rem;
+  --text-chapter: clamp(1.5rem, 1rem + 2vw, 2.125rem);
+  --text-hero: clamp(2.5rem, 1.2rem + 5.4vw, 5rem);
+
+  --leading-text: 1.6;
+  --leading-tight: 1.02;
+  --measure: 34rem;
+
+  /* --- shared: space ----------------------------------------------------- */
+  --space-2xs: 0.375rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1.25rem;
+  --space-md: 2rem;
+  --space-lg: 3.25rem;
+  --space-xl: 5.25rem;
+  --space-2xl: 8.5rem;
+
+  --gutter: clamp(1.5rem, 5vw, 4.5rem);
+  --page-max: 80rem;
+
+  color-scheme: dark;
+}
+
+/* --- Story: Oxblood ------------------------------------------------------ */
+[data-world='story'] {
+  --ground: #191016;
+  --ground-raise: #22161d;
+  --ground-wash: radial-gradient(120% 90% at 78% 12%, #2a1a22 0%, #191016 55%);
+  --ink: #f3e9e4;
+  --ink-muted: #a08c90;
+  --ink-faint: #7c6771;
+  --line: #3a2831;
+  --accent: #e0736e;
+  --accent-dim: rgba(224, 115, 110, 0.16);
+
+  --face-display: var(--font-display), Georgia, serif;
+  --face-text: var(--font-narrative), Georgia, serif;
+  --face-meta: var(--font-meta), -apple-system, sans-serif;
+
+  --display-weight: 400;
+  --display-tracking: -0.015em;
+}
+
+/* --- Work: Signal -------------------------------------------------------- */
+[data-world='work'] {
+  --ground: #0b0b0c;
+  --ground-raise: #141416;
+  --ground-wash: none;
+  --ink: #f4f4f2;
+  --ink-muted: #8b8b90;
+  --ink-faint: #63636a;
+  --line: #242427;
+  --accent: #8b5cf6;
+  --accent-dim: rgba(139, 92, 246, 0.18);
+
+  --face-display: var(--font-grotesque), -apple-system, sans-serif;
+  --face-text: var(--font-meta), -apple-system, sans-serif;
+  --face-meta: var(--font-meta), -apple-system, sans-serif;
+  --face-data: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --display-weight: 600;
+  --display-tracking: -0.035em;
+}
+
+/* The gate belongs to neither. It is the neutral hallway between them. */
+[data-world='gate'] {
+  --ground: #0b0b0c;
+  --ground-raise: #141416;
+  --ground-wash: none;
+  --ink: #f4f4f2;
+  --ink-muted: #8b8b90;
+  --ink-faint: #63636a;
+  --line: #242427;
+  --accent: #8b5cf6;
+  --accent-dim: rgba(139, 92, 246, 0.18);
+
+  --face-display: var(--font-grotesque), -apple-system, sans-serif;
+  --face-text: var(--font-meta), -apple-system, sans-serif;
+  --face-meta: var(--font-meta), -apple-system, sans-serif;
+  --face-data: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --display-weight: 600;
+  --display-tracking: -0.035em;
+}

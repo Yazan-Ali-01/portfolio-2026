@@ -1,0 +1,353 @@
+---
+import Story from './Story.astro';
+import WorldSwitch from '../components/WorldSwitch.astro';
+import { meta } from '../content/meta';
+import { projects } from '../content/projects';
+import type { Project } from '../content/projects';
+
+interface Props {
+  entry: {
+    data: {
+      title: string;
+      lede: string;
+      role: string;
+      period: string;
+      stack: string[];
+      status: string;
+      liveUrl?: string;
+      order: number;
+      needsReview: boolean;
+    };
+  };
+  project: Project;
+}
+
+const { entry, project } = Astro.props;
+const d = entry.data;
+const index = String(d.order).padStart(2, '0');
+const others = projects.filter((p) => p.id !== project.id);
+---
+
+<Story world="work" title={`${project.name} — ${d.title} | ${meta.name}`} description={d.lede}>
+  <article class="cs">
+    <div class="cs__top u-shell--story">
+      <div class="cs__nav">
+        <WorldSwitch current="work" trail={project.name} />
+      </div>
+
+      <p class="cs__index">{index}</p>
+      <h1 class="cs__title">{d.title}</h1>
+      <p class="cs__lede">{d.lede}</p>
+    </div>
+
+    <figure class="cs__artifact u-shell--story">
+      <div class="frame">
+        <div class="frame__bar">
+          <span class="frame__dots" aria-hidden="true"></span>
+          <span class="frame__label">
+            {project.artifact.kind === 'diagram' ? 'architecture' : project.liveUrl ?? project.name}
+          </span>
+        </div>
+        <img src={project.artifact.src} alt={project.artifact.alt} decoding="async" />
+      </div>
+      <figcaption>{project.artifact.caption}</figcaption>
+    </figure>
+
+    <div class="cs__main u-shell--story">
+      <aside class="spec">
+        <dl>
+          <div><dt>Role</dt><dd>{d.role}</dd></div>
+          <div><dt>Period</dt><dd>{d.period}</dd></div>
+          <div><dt>Status</dt><dd>{d.status}</dd></div>
+          <div>
+            <dt>Stack</dt>
+            <dd>
+              <ul class="spec__stack">
+                {d.stack.map((tool) => <li>{tool}</li>)}
+              </ul>
+            </dd>
+          </div>
+        </dl>
+
+        <div class="spec__links">
+          {
+            d.liveUrl && (
+              <a
+                href={d.liveUrl}
+                rel="noopener noreferrer"
+                target="_blank"
+                data-ev="case_outbound"
+                data-ev-kind="live"
+                data-ev-project={project.id}
+              >
+                See it live
+              </a>
+            )
+          }
+          {
+            project.sourceUrl && (
+              <a
+                href={project.sourceUrl}
+                rel="noopener noreferrer"
+                target="_blank"
+                data-ev="case_outbound"
+                data-ev-kind="source"
+                data-ev-project={project.id}
+              >
+                See the code
+              </a>
+            )
+          }
+        </div>
+      </aside>
+
+      <div class="cs__body">
+        {
+          d.needsReview && (
+            <p class="review">
+              <strong>Draft.</strong> The technical detail here was written from Yazan's brief
+              and the live product, not sourced from him directly. Pending his review.
+            </p>
+          )
+        }
+        <div class="prose"><slot /></div>
+      </div>
+    </div>
+
+    <nav class="cs__next u-shell--story">
+      <p class="cs__nextlabel">Also on the desk</p>
+      <ul>
+        {
+          others.map((other) => (
+            <li>
+              <a href={`/work/${other.id}`} data-ev="case_next" data-ev-project={other.id}>
+                <span class="cs__nextname">{other.name}</span>
+                <span class="cs__nextsay">{other.proposition}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </article>
+
+  <script define:vars={{ slug: project.id }}>
+    import('../lib/analytics').then(({ trackDepth }) => trackDepth(`case:${slug}`));
+  </script>
+</Story>
+
+<style>
+  .cs__top {
+    padding-block: var(--space-md) var(--space-lg);
+  }
+
+  .cs__nav {
+    margin-bottom: var(--space-xl);
+  }
+
+  .cs__index {
+    font-family: var(--face-data);
+    font-size: var(--text-xs);
+    color: var(--accent);
+    margin-bottom: var(--space-xs);
+  }
+
+  .cs__title {
+    font-size: clamp(2rem, 1rem + 3.6vw, 3.75rem);
+    max-width: 18ch;
+    margin-bottom: var(--space-sm);
+  }
+
+  .cs__lede {
+    font-size: var(--text-lg);
+    line-height: 1.5;
+    color: var(--ink-muted);
+    max-width: 42rem;
+  }
+
+  /* The artifact is framed as a screen, not dropped in as a bare image. */
+  .cs__artifact {
+    margin-block: 0 var(--space-xl);
+  }
+
+  .frame {
+    border: 1px solid var(--line);
+    background: var(--ground-raise);
+    max-width: 68rem;
+  }
+
+  .frame__bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: 0.55rem 0.8rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .frame__dots {
+    width: 2.6rem;
+    height: 7px;
+    flex: none;
+    background-image: radial-gradient(circle, var(--line) 3.5px, transparent 3.6px);
+    background-size: 0.9rem 100%;
+  }
+
+  .frame__label {
+    font-family: var(--face-data);
+    font-size: 0.72rem;
+    color: var(--ink-faint);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .cs__artifact figcaption {
+    max-width: 42rem;
+    margin-top: var(--space-xs);
+    font-family: var(--face-meta);
+    font-size: var(--text-xs);
+    color: var(--ink-muted);
+    line-height: 1.5;
+  }
+
+  .cs__main {
+    display: grid;
+    gap: var(--space-lg);
+    padding-bottom: var(--space-xl);
+  }
+
+  @media (min-width: 62rem) {
+    .cs__main {
+      grid-template-columns: 14rem minmax(0, 1fr);
+      gap: var(--space-xl);
+      align-items: start;
+    }
+
+    .spec {
+      position: sticky;
+      top: var(--space-md);
+    }
+  }
+
+  .spec dl {
+    margin: 0;
+    display: grid;
+    gap: var(--space-sm);
+    font-family: var(--face-data);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    border-top: 1px solid var(--line);
+    padding-top: var(--space-sm);
+  }
+
+  .spec dt {
+    color: var(--ink-faint);
+    margin-bottom: 0.25rem;
+  }
+
+  .spec dd {
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .spec__stack {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.2rem;
+  }
+
+  .spec__links {
+    display: grid;
+    gap: 0.55rem;
+    justify-items: start;
+    margin-top: var(--space-sm);
+  }
+
+  .spec__links a {
+    font-family: var(--face-data);
+    font-size: 0.75rem;
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px solid var(--accent-dim);
+    padding-bottom: 2px;
+  }
+
+  .spec__links a:hover {
+    border-bottom-color: var(--accent);
+  }
+
+  .review {
+    max-width: var(--measure);
+    margin: 0 0 var(--space-md);
+    padding: var(--space-sm);
+    border: 1px solid var(--accent-dim);
+    border-left: 2px solid var(--accent);
+    background: var(--ground-raise);
+    font-size: var(--text-sm);
+    color: var(--ink-muted);
+  }
+
+  .review strong {
+    color: var(--ink);
+  }
+
+  .cs__next {
+    border-top: 1px solid var(--line);
+    padding-block: var(--space-md) var(--space-2xl);
+  }
+
+  .cs__nextlabel {
+    font-family: var(--face-data);
+    font-size: var(--text-xs);
+    color: var(--ink-faint);
+    margin-bottom: var(--space-sm);
+  }
+
+  .cs__next ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  @media (min-width: 52rem) {
+    .cs__next ul {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+    }
+  }
+
+  .cs__next a {
+    display: grid;
+    gap: 0.3rem;
+    text-decoration: none;
+    padding: var(--space-sm);
+    border: 1px solid var(--line);
+    transition: border-color 0.25s ease;
+  }
+
+  .cs__next a:hover {
+    border-color: var(--accent);
+  }
+
+  .cs__nextname {
+    font-family: var(--face-display);
+    font-weight: var(--display-weight);
+    font-size: var(--text-lg);
+    letter-spacing: var(--display-tracking);
+  }
+
+  .cs__nextsay {
+    font-size: var(--text-sm);
+    color: var(--ink-muted);
+  }
+</style>

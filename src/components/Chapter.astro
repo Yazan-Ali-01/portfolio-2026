@@ -1,0 +1,145 @@
+---
+import type { Chapter } from '../content/story';
+
+interface Props {
+  chapter: Extract<Chapter, { kind: 'prose' }>;
+}
+
+const { chapter } = Astro.props;
+const isOpening = chapter.index === 0;
+---
+
+<section class="chapter" id={chapter.id} data-chapter={chapter.index}>
+  <div class="u-shell--story">
+    <div class="u-col">
+      {
+        isOpening ? (
+          <h1 class="chapter__hero">{chapter.hero}</h1>
+        ) : (
+          <h2 class="chapter__mark">{chapter.title}</h2>
+        )
+      }
+
+      {chapter.paragraphs.map((p) => <p set:html={p} />)}
+
+      {
+        chapter.aside && (
+          <details class="aside">
+            <summary class="aside__summary">{chapter.aside.summary}</summary>
+            <div class="aside__body">
+              {chapter.aside.paragraphs.map((p) => (
+                <p>{p}</p>
+              ))}
+            </div>
+          </details>
+        )
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .chapter {
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    padding-block: var(--space-xl);
+  }
+
+  /* The opening line is the page's h1 and its LCP element. */
+  .chapter__hero {
+    font-size: var(--text-hero);
+    letter-spacing: -0.022em;
+    margin-bottom: var(--space-md);
+  }
+
+  /* A running head, not a section label: it names where you are in the story. */
+  .chapter__mark {
+    font-family: var(--face-meta);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--ink-muted);
+    margin-bottom: var(--space-md);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  .chapter__mark::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .chapter :global(em) {
+    font-style: italic;
+    color: var(--ink);
+  }
+
+  .aside {
+    margin-top: var(--space-md);
+    border-top: 1px solid var(--line);
+    padding-top: var(--space-sm);
+    max-width: var(--measure);
+  }
+
+  .aside__summary {
+    font-family: var(--face-meta);
+    font-size: var(--text-sm);
+    color: var(--ink-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-xs);
+    list-style: none;
+    transition: color 0.15s ease;
+  }
+
+  .aside__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .aside__summary::before {
+    content: '+';
+    width: 0.75em;
+    color: var(--ink-muted);
+    flex: none;
+  }
+
+  .aside[open] .aside__summary::before {
+    content: '\2212';
+  }
+
+  .aside__summary:hover {
+    color: var(--ink);
+  }
+
+  .aside__body {
+    padding-top: var(--space-sm);
+  }
+
+  /* Motion that answers a reader's action is the one kind SPEC.md allows.
+     Degrades to an instant open where ::details-content is unsupported. */
+  .aside::details-content {
+    block-size: 0;
+    overflow: hidden;
+    transition:
+      block-size 0.32s ease,
+      content-visibility 0.32s allow-discrete;
+  }
+
+  .aside[open]::details-content {
+    block-size: auto;
+  }
+
+  .aside__body p {
+    font-size: var(--text-sm);
+    color: var(--ink-muted);
+    line-height: 1.65;
+  }
+
+  .aside__body p:last-child {
+    margin-bottom: 0;
+  }
+</style>

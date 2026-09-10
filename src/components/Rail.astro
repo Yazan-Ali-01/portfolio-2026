@@ -1,0 +1,79 @@
+---
+import { story } from '../content/story';
+
+/**
+ * Position in the ten-chapter sequence. Rendered as real anchor links, so with
+ * JavaScript disabled it degrades to a working table of contents rather than
+ * disappearing. The scroll module lights the active tick.
+ */
+---
+
+<nav class="rail" aria-label="Chapters">
+  <ol class="rail__list">
+    {
+      story.map((chapter) => (
+        <li>
+          <a
+            class="rail__link"
+            href={`#${chapter.id}`}
+            data-rail={chapter.index}
+            title={chapter.title}
+            aria-label={`${chapter.index + 1}. ${chapter.title}`}
+          >
+            <span class="rail__tick" />
+          </a>
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+
+<style>
+  .rail {
+    display: none;
+  }
+
+  /* Only shown where it fits in the left margin without pushing the column in. */
+  @media (min-width: 85rem) {
+    .rail {
+      display: block;
+      position: fixed;
+      left: max(1.5rem, calc((100vw - var(--page-max)) / 2 - 0.5rem));
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 5;
+    }
+  }
+
+  .rail__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .rail__link {
+    display: block;
+    padding-block: 0.28rem;
+  }
+
+  .rail__tick {
+    display: block;
+    width: 1.15rem;
+    height: 1px;
+    background: var(--ink-faint);
+    transition:
+      width 0.4s ease,
+      background-color 0.4s ease;
+  }
+
+  .rail__link:hover .rail__tick {
+    background: var(--ink-muted);
+  }
+
+  .rail__link[data-active='true'] .rail__tick {
+    width: 2.5rem;
+    background: var(--accent);
+  }
+</style>

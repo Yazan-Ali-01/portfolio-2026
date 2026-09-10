@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 380" role="img" aria-label="Architecture diagram: client requests hit the Fastify API with row-level security, which enqueues heavy work onto BullMQ over Redis; ingestion and AI workers consume the queue, using tenant-isolated S3 storage, a legal-text retrieval corpus, and Anthropic and OpenAI providers.">
+  <!--
+    Self-contained on purpose. This is loaded through <img>, so it cannot inherit
+    the page stylesheet and cannot read CSS custom properties. The Signal palette
+    is written in literally; if the palette moves, this file moves with it.
+  -->
+  <style>
+    .d-node { fill: #141416; stroke: #2E2E33; stroke-width: 1; }
+    .d-node-accent { fill: #17131F; stroke: #8B5CF6; stroke-width: 1.2; }
+    .d-store { fill: #101012; stroke: #2E2E33; stroke-width: 1; stroke-dasharray: 3 3; }
+    .d-title {
+      fill: #F4F4F2; font-size: 13px; font-weight: 600;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    .d-sub {
+      fill: #8B8B90; font-size: 11px;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    .d-lbl {
+      fill: #63636A; font-size: 10px; letter-spacing: .02em;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+    .d-flow { fill: none; stroke: #3C3C43; stroke-width: 1.4; }
+    .d-flow-accent { fill: none; stroke: #8B5CF6; stroke-width: 1.6; }
+    .d-arrow { fill: #3C3C43; }
+    .d-arrow-accent { fill: #8B5CF6; }
+  </style>
+
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-arrow"/></marker>
+    <marker id="ara" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="d-arrow-accent"/></marker>
+  </defs>
+
+  <rect x="0" y="0" width="860" height="380" fill="#0B0B0C"/>
+
+  <rect class="d-node" x="24" y="150" width="120" height="64" rx="8"/>
+  <text class="d-title" x="84" y="178" text-anchor="middle">Client</text>
+  <text class="d-sub" x="84" y="196" text-anchor="middle">web app</text>
+
+  <rect class="d-node-accent" x="220" y="132" width="164" height="100" rx="8"/>
+  <text class="d-title" x="302" y="164" text-anchor="middle">API · Fastify</text>
+  <text class="d-sub" x="302" y="182" text-anchor="middle">dual-token JWT</text>
+  <text class="d-sub" x="302" y="197" text-anchor="middle">RLS tenant context</text>
+  <text class="d-sub" x="302" y="212" text-anchor="middle">modular monolith</text>
+
+  <rect class="d-store" x="220" y="286" width="164" height="62" rx="8"/>
+  <text class="d-title" x="302" y="314" text-anchor="middle">PostgreSQL 16</text>
+  <text class="d-sub" x="302" y="332" text-anchor="middle">row-level security</text>
+
+  <rect class="d-node" x="452" y="150" width="128" height="64" rx="8"/>
+  <text class="d-title" x="516" y="178" text-anchor="middle">BullMQ</text>
+  <text class="d-sub" x="516" y="196" text-anchor="middle">Redis broker</text>
+
+  <rect class="d-node" x="648" y="60" width="188" height="60" rx="8"/>
+  <text class="d-title" x="742" y="86" text-anchor="middle">worker · ingestion</text>
+  <text class="d-sub" x="742" y="104" text-anchor="middle">parse, chunk, index</text>
+
+  <rect class="d-node-accent" x="648" y="150" width="188" height="64" rx="8"/>
+  <text class="d-title" x="742" y="176" text-anchor="middle">worker · AI</text>
+  <text class="d-sub" x="742" y="194" text-anchor="middle">retrieval-augmented gen</text>
+
+  <rect class="d-store" x="648" y="246" width="188" height="52" rx="8"/>
+  <text class="d-title" x="742" y="269" text-anchor="middle" font-size="12.5">S3 · tenant buckets</text>
+
+  <rect class="d-store" x="648" y="312" width="90" height="52" rx="8"/>
+  <text class="d-sub" x="693" y="335" text-anchor="middle">legal corpus</text>
+  <text class="d-sub" x="693" y="349" text-anchor="middle">retrieval</text>
+
+  <rect class="d-store" x="746" y="312" width="90" height="52" rx="8"/>
+  <text class="d-sub" x="791" y="335" text-anchor="middle">Anthropic</text>
+  <text class="d-sub" x="791" y="349" text-anchor="middle">+ OpenAI</text>
+
+  <line class="d-flow" x1="144" y1="182" x2="214" y2="182" marker-end="url(#ar)"/>
+  <text class="d-lbl" x="179" y="174" text-anchor="middle">https</text>
+  <line class="d-flow" x1="302" y1="232" x2="302" y2="282" marker-end="url(#ar)" marker-start="url(#ar)"/>
+  <line class="d-flow-accent" x1="384" y1="182" x2="448" y2="182" marker-end="url(#ara)"/>
+  <text class="d-lbl" x="416" y="174" text-anchor="middle">enqueue</text>
+  <path class="d-flow" d="M580,176 C614,176 616,90 644,90" marker-end="url(#ar)"/>
+  <path class="d-flow-accent" d="M580,188 C614,188 616,182 644,182" marker-end="url(#ara)"/>
+  <line class="d-flow" x1="742" y1="120" x2="742" y2="146" marker-end="url(#ar)" marker-start="url(#ar)" opacity="0.5"/>
+  <line class="d-flow" x1="742" y1="214" x2="742" y2="242" marker-end="url(#ar)"/>
+  <path class="d-flow-accent" d="M676,214 C636,224 628,256 628,284 C628,302 672,302 693,302 L693,308" marker-end="url(#ara)"/>
+  <path class="d-flow-accent" d="M808,214 C848,224 856,256 856,284 C856,302 812,302 791,302 L791,308" marker-end="url(#ara)"/>
+</svg>

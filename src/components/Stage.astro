@@ -1,0 +1,22 @@
+---
+/**
+ * The sticky stage the story scrolls over. E03 mounts the three.js island into
+ * the slot; until then it is empty and the page is simply dark.
+ *
+ * `aria-hidden` because the scene is decorative — the story must make complete
+ * sense without it.
+ */
+---
+
+<div class="stage" aria-hidden="true">
+  <slot />
+</div>
+
+<style>
+  .stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    pointer-events: none;
+  }
+</style>

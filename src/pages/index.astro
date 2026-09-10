@@ -1,0 +1,194 @@
+---
+import Story from '../layouts/Story.astro';
+import { meta } from '../content/meta';
+import { projects } from '../content/projects';
+
+/**
+ * The gate (E08). Two ways in.
+ *
+ * Not 3D: this is the page a recruiter hits from a LinkedIn tap, and it is the
+ * one place the zero-JS, sub-second first paint matters most.
+ *
+ * Each door sets its own `data-world`, so it renders in the palette and
+ * typography of the place it leads to. The choice is visible before it is made.
+ */
+---
+
+<Story world="gate">
+  <main class="gate">
+    <div class="gate__top">
+      <header class="id u-shell--story">
+        <span class="id__name">{meta.name}</span>
+        <span class="id__role">{meta.role}, {meta.location}</span>
+      </header>
+
+      <h1 class="statement u-shell--story">
+        A door closed by a number, and every year after spent building doors that open by
+        hand.
+      </h1>
+    </div>
+
+    <div class="doors">
+      <a class="door" data-world="story" href="/story" data-ev="gate_choice" data-ev-door="story">
+        <span class="door__idx">01</span>
+        <h2 class="door__name">The story</h2>
+        <p class="door__say">Six years, a move to Dubai, and still no degree.</p>
+        <span class="door__cue">Read it</span>
+      </a>
+
+      <a class="door" data-world="work" href="/work" data-ev="gate_choice" data-ev-door="work">
+        <span class="door__idx">02</span>
+        <h2 class="door__name">The work</h2>
+        <p class="door__say">Three systems, owned end to end.</p>
+        <ul class="plist">
+          {
+            projects.map((project) => (
+              <li>
+                <span class="plist__name">{project.name}</span>
+                <span class="plist__status">{project.status}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <span class="door__cue">Pull up a chair</span>
+      </a>
+    </div>
+  </main>
+</Story>
+
+<style>
+  .gate {
+    min-height: 100svh;
+    display: grid;
+    grid-template-rows: auto 1fr;
+  }
+
+  .gate__top {
+    padding-block: var(--space-md) var(--space-xl);
+    background-image: linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 4.5rem 4.5rem;
+    background-position: center;
+  }
+
+  .id {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-xs);
+    font-family: var(--face-meta);
+    font-size: var(--text-xs);
+    margin-bottom: clamp(2rem, 8vh, 4.5rem);
+  }
+
+  .id__name {
+    font-weight: 600;
+  }
+
+  .id__role {
+    color: var(--ink-muted);
+  }
+
+  .statement {
+    font-size: var(--text-hero);
+    max-width: 18ch;
+    margin: 0;
+  }
+
+  /*
+    The two doors are not symmetrical, and they are not the same colour. Each one
+    is a window into the world it opens.
+  */
+  .doors {
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+
+  @media (min-width: 52rem) {
+    .doors {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    }
+  }
+
+  .door {
+    display: block;
+    text-decoration: none;
+    background: var(--ground);
+    background-image: var(--ground-wash);
+    color: var(--ink);
+    padding: var(--space-md) var(--gutter) var(--space-lg);
+    position: relative;
+    transition: filter 0.3s ease;
+  }
+
+  .door:hover,
+  .door:focus-visible {
+    filter: brightness(1.22);
+  }
+
+  .door::after {
+    content: '';
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s ease;
+  }
+
+  .door:hover::after,
+  .door:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  .door__idx {
+    font-family: var(--face-meta);
+    font-size: var(--text-xs);
+    color: var(--accent);
+  }
+
+  .door__name {
+    font-size: clamp(1.75rem, 1rem + 2.4vw, 2.75rem);
+    margin: var(--space-2xs) 0 var(--space-xs);
+  }
+
+  .door__say {
+    color: var(--ink-muted);
+    max-width: 28rem;
+    margin-bottom: var(--space-sm);
+  }
+
+  .plist {
+    list-style: none;
+    margin: 0 0 var(--space-sm);
+    padding: 0;
+    max-width: 30rem;
+    font-family: var(--face-meta);
+    font-size: var(--text-xs);
+  }
+
+  .plist li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    padding-block: 0.5rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .plist__name {
+    font-weight: 500;
+  }
+
+  .plist__status {
+    color: var(--ink-muted);
+    text-align: right;
+  }
+
+  .door__cue {
+    font-family: var(--face-meta);
+    font-size: var(--text-xs);
+    color: var(--accent);
+  }
+</style>

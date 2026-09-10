@@ -1,0 +1,10 @@
+import { chromium } from 'playwright';
+const [url, out, x, y, w, h] = process.argv.slice(2);
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 });
+await p.goto(url, { waitUntil: 'networkidle' });
+await p.waitForTimeout(1500);
+await p.evaluate(() => document.querySelector('astro-dev-toolbar')?.remove());
+await p.screenshot({ path: out, clip: { x: +x, y: +y, width: +w, height: +h } });
+console.log(out, 'ok');
+await b.close();

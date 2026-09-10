@@ -1,0 +1,98 @@
+---
+import Font from 'astro/components/Font.astro';
+import { meta } from '../content/meta';
+import '../styles/base.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Which palette and typography this page belongs to. */
+  world?: 'gate' | 'story' | 'work';
+}
+
+const { title = meta.title, description = meta.description, world = 'gate' } = Astro.props;
+
+const canonical = new URL(Astro.url.pathname, meta.siteUrl).href;
+const ogImage = new URL(meta.ogImage, meta.siteUrl).href;
+
+/**
+ * Matches the CV. The LinkedIn share card is the most-seen surface of this site,
+ * so these are not decoration.
+ */
+const personSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: meta.name,
+  url: meta.siteUrl,
+  email: `mailto:${meta.email}`,
+  jobTitle: meta.role,
+  description: meta.description,
+  address: { '@type': 'PostalAddress', addressLocality: meta.location },
+  knowsAbout: meta.knowsAbout,
+  sameAs: [meta.linkedin, meta.github],
+  hasCredential: {
+    '@type': 'EducationalOccupationalCredential',
+    credentialCategory: 'certification',
+    name: meta.credential,
+    recognizedBy: { '@type': 'Organization', name: 'Amazon Web Services' },
+  },
+};
+---
+
+<html lang={meta.lang} data-world={world}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="generator" content={Astro.generator} />
+
+    <meta property="og:type" content="profile" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content="en_US" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(personSchema)} is:inline />
+    {/*
+      Preload only what paints above the fold: the two upright Newsreader weights.
+      `preload` with no filter would preload all four files of the family — the
+      italics are used once, in chapter 3, and must not block first paint.
+    */}
+    {/* Preload only the display face this world actually paints above the fold. */}
+    {world === 'story' && <Font cssVariable="--font-display" preload />}
+    {world !== 'story' && <Font cssVariable="--font-grotesque" preload={[{ weight: 600 }]} />}
+    <Font cssVariable="--font-meta" preload={[{ weight: 400, style: 'normal' }]} />
+    {world === 'story' && (
+      <Font
+        cssVariable="--font-narrative"
+        preload={[
+          { weight: 400, style: 'normal' },
+          { weight: 600, style: 'normal' },
+        ]}
+      />
+    )}
+    {world !== 'story' && <Font cssVariable="--font-narrative" />}
+    {world === 'story' && <Font cssVariable="--font-grotesque" />}
+    {world !== 'story' && <Font cssVariable="--font-display" />}
+  </head>
+  <body>
+    <a class="u-skip" href="#story">Skip to the story</a>
+    <slot />
+
+    <script>
+      import { initAnalytics } from '../lib/analytics';
+      initAnalytics();
+    </script>
+  </body>
+</html>

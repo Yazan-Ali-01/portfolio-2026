@@ -1,0 +1,131 @@
+---
+import Story from '../layouts/Story.astro';
+import Stage from '../components/Stage.astro';
+import Rail from '../components/Rail.astro';
+import Scene from '../components/Scene.tsx';
+import Chapter from '../components/Chapter.astro';
+import RecommendationSection from '../components/RecommendationSection.astro';
+import { story } from '../content/story';
+import WorldSwitch from '../components/WorldSwitch.astro';
+import { meta } from '../content/meta';
+---
+
+<Story world="story">
+  <header class="masthead u-shell--story">
+    <WorldSwitch current="story" />
+    <span class="masthead__role">{meta.role}, {meta.location}</span>
+  </header>
+
+  <Rail />
+
+  <main id="story" class="story">
+    <Stage>
+      <Scene client:visible />
+    </Stage>
+
+    <div class="chapters">
+      {
+        story.map((chapter) => {
+          if (chapter.kind === 'recommendations') {
+            return (
+              <RecommendationSection id={chapter.id} index={chapter.index} title={chapter.title} />
+            );
+          }
+          return <Chapter chapter={chapter} />;
+        })
+      }
+
+      <footer class="contact u-shell--story" id="contact">
+        <div class="u-col">
+          <a class="contact__mail" href={`mailto:${meta.email}`}>{meta.email}</a>
+          <p class="contact__links">
+            <a href={meta.linkedin} rel="me" data-ev="contact_click" data-ev-channel="linkedin">LinkedIn</a>
+            <a href={meta.github} rel="me" data-ev="contact_click" data-ev-channel="github">GitHub</a>
+          </p>
+        </div>
+      </footer>
+    </div>
+  </main>
+
+  <script>
+    import '../scripts/story.ts';
+  </script>
+</Story>
+
+<style>
+  .masthead {
+    position: relative;
+    z-index: 1;
+    padding-block: var(--space-md) 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-xs);
+    font-family: var(--face-meta);
+    font-size: var(--text-xs);
+  }
+
+  .masthead__role {
+    margin-left: auto;
+  }
+
+  .masthead__role {
+    color: var(--ink-muted);
+  }
+
+  .story {
+    position: relative;
+  }
+
+  /* Pull the story up over the sticky stage. The scene sits behind every
+     chapter, including the last — the light is still arriving at §10. */
+  .chapters {
+    position: relative;
+    z-index: 1;
+    margin-top: -100svh;
+  }
+
+  .contact {
+    padding-block: var(--space-lg) var(--space-2xl);
+  }
+
+  .contact__mail {
+    font-family: var(--face-meta);
+    font-size: var(--text-lg);
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 0.1em;
+    word-break: break-word;
+    transition: color 0.15s ease;
+  }
+
+  .contact__mail:hover {
+    color: var(--accent);
+  }
+
+  .contact__links {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+    margin-bottom: 0;
+    font-family: var(--face-meta);
+    font-size: var(--text-sm);
+  }
+
+  .contact__links a {
+    color: var(--ink-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 2px;
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease;
+  }
+
+  .contact__links a:hover {
+    color: var(--ink);
+    border-bottom-color: var(--ink-faint);
+  }
+</style>

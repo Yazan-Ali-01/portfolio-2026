@@ -1,0 +1,319 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* Lets the info badge animate from 0 to auto height. */
+  interpolate-size: allow-keywords;
+}
+
+body {
+  margin: 0;
+  background: var(--ground);
+  background-image: var(--ground-wash);
+  color: var(--ink);
+  font-family: var(--face-text);
+  font-size: var(--text-base);
+  line-height: var(--leading-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+p {
+  margin: 0 0 var(--space-sm);
+  max-width: var(--measure);
+  /* Avoids single-word last lines across ten chapters of prose. */
+  text-wrap: pretty;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-family: var(--face-display);
+  font-weight: var(--display-weight);
+  letter-spacing: var(--display-tracking);
+  line-height: var(--leading-tight);
+  text-wrap: balance;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--accent-dim);
+  color: var(--ink);
+}
+
+body {
+  caret-color: var(--accent);
+}
+
+.u-meta {
+  font-family: var(--face-meta);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.u-shell {
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.u-skip {
+  position: absolute;
+  left: -9999px;
+}
+
+.u-skip:focus {
+  left: var(--gutter);
+  top: var(--space-xs);
+  z-index: 50;
+  padding: var(--space-2xs) var(--space-xs);
+  background: var(--ground-raise);
+  font-family: var(--face-meta);
+  font-size: var(--text-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* The reading column. Every section aligns to it so the story has one spine. */
+.u-col {
+  max-width: var(--measure);
+  margin-inline: 0;
+}
+
+.u-shell--story {
+  width: 100%;
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* The island renders client-side, so its styles live here rather than in a
+   scoped Astro block. */
+.scene__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Keeps the tunnel in its own field so it never crosses the reading column. */
+  mask-image: radial-gradient(ellipse 54% 94% at 79% 50%, #000 28%, transparent 74%);
+}
+
+@media (max-width: 61.99rem) {
+  .scene__canvas {
+    /* Sits above the reading band and steps back, so prose stays legible. */
+    mask-image: radial-gradient(ellipse 88% 40% at 58% 22%, #000 30%, transparent 80%);
+    opacity: 0.62;
+  }
+}
+
+.scene__debug {
+  position: fixed;
+  left: var(--gutter);
+  bottom: var(--space-sm);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  pointer-events: auto;
+  font-family: var(--face-meta);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  background: var(--ground-raise);
+  border: 1px solid var(--line);
+  padding: var(--space-2xs) var(--space-xs);
+}
+
+.scene__debug input {
+  width: min(42vw, 22rem);
+  accent-color: var(--accent);
+}
+
+/* Long-form case study prose. Rendered from Markdown, so styled by element.
+   Sections are numbered with a CSS counter rather than by editing the content. */
+.prose {
+  max-width: var(--measure);
+  counter-reset: section;
+}
+
+.prose h2 {
+  font-size: clamp(1.35rem, 1rem + 1.3vw, 1.8rem);
+  margin-block: var(--space-lg) var(--space-sm);
+  display: grid;
+  grid-template-columns: 3rem 1fr;
+  align-items: baseline;
+}
+
+.prose h2::before {
+  counter-increment: section;
+  content: counter(section, decimal-leading-zero);
+  font-family: var(--face-data);
+  font-size: 0.72rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--accent);
+}
+
+.prose h3 {
+  font-family: var(--face-meta);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0;
+  margin-block: var(--space-md) var(--space-xs);
+  padding-left: 3rem;
+  position: relative;
+}
+
+.prose h3::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.6em;
+  width: 2rem;
+  height: 1px;
+  background: var(--accent);
+}
+
+.prose p,
+.prose ul {
+  padding-left: 3rem;
+}
+
+.prose ul {
+  margin: 0 0 var(--space-sm);
+  list-style: none;
+}
+
+.prose li {
+  margin-bottom: var(--space-xs);
+  color: var(--ink-muted);
+  position: relative;
+  padding-left: 1rem;
+}
+
+.prose li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.62em;
+  width: 4px;
+  height: 4px;
+  background: var(--ink-faint);
+}
+
+.prose li strong,
+.prose p strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.prose p {
+  color: var(--ink-muted);
+  max-width: none;
+}
+
+.prose em {
+  color: var(--ink);
+}
+
+.prose code {
+  font-family: var(--face-data);
+  font-size: 0.86em;
+  color: var(--accent);
+  background: var(--ground-raise);
+  padding: 0.1em 0.34em;
+}
+
+@media (max-width: 40rem) {
+  .prose h2 {
+    grid-template-columns: 2rem 1fr;
+  }
+
+  .prose h3,
+  .prose p,
+  .prose ul {
+    padding-left: 0;
+  }
+
+  .prose h3 {
+    padding-left: 2.5rem;
+  }
+}
+
+/* Studio island (E10). Rendered client-side, so styled globally. */
+.studio__canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.studio__label {
+  /* Positioned by the scene each frame, in canvas pixels, above whatever is
+     hovered. left/top stay at 0; the transform does the work. */
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 0.45rem 0.7rem;
+  background: rgba(11, 11, 12, 0.9);
+  border: 1px solid var(--accent);
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* A project is a destination: just name it. */
+.studio__label[data-kind='project'] {
+  padding: 0.3rem 0.6rem;
+  white-space: nowrap;
+}
+
+/* A desk note is a small aside: it needs room to be read. */
+.studio__label[data-kind='note'] {
+  width: min(21rem, 62vw);
+  border-color: var(--line);
+  border-left: 2px solid var(--accent);
+}
+
+.studio__name {
+  margin: 0;
+  font-family: var(--face-data);
+  font-size: var(--text-xs);
+  color: var(--ink);
+}
+
+.studio__body {
+  margin: 0.4rem 0 0;
+  font-family: var(--face-meta);
+  font-size: var(--text-xs);
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
