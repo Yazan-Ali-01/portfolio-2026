@@ -26,7 +26,7 @@ Brief: [`docs/WORK-SPEC.md`](../WORK-SPEC.md).
 | E08 | [The gate](E08-gate.md) | E01 | **done** |
 | E09 | [Work content and case studies](E09-work-content.md) | E01 | **done** except per-page OG (T7) |
 | E10 | [The studio](E10-studio.md) | E09 | **done**; T5 deliberately dropped, T4 open |
-| E11 | [Story refresh](E11-story-refresh.md) | E08 | **not started** |
+| E11 | [Story refresh](E11-story-refresh.md) | E08 | **done** except T4 (load moment) |
 
 ## The one architectural decision that shapes the rest
 
@@ -43,7 +43,7 @@ chapterProgress }`. Two consequences worth protecting:
 
 | | Blocked on |
 |---|---|
-| **E11 — story refresh**, all six tasks | nothing; this is the real remaining build work |
+| E11-T4 — one orchestrated entrance moment on load | nothing |
 | E10-T4 — keyboard path into the 3D room | nothing; the index list under the room is the current fallback |
 | E09-T7 — per-case-study OG cards | nothing |
 | E07-T8 — fact-check the four `claims[]` | **Yazan** |

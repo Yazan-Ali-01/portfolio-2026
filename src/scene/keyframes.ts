@@ -34,9 +34,11 @@ export const keyframes: SceneValues[] = [
   { lightDistance: 0.88, lightIntensity: 0.18, ringSpread: 0.9, ringTilt: 0.45, alignment: 0.3 },
   // 6 — Back up. Light recovers past its previous position. Rings level out.
   { lightDistance: 0.48, lightIntensity: 0.62, ringSpread: 0.7, ringTilt: 0.1, alignment: 0.85 },
-  // 7 — What they say. Still. Let the quotes hold the page.
+  // 7 — What came of it. Nearly still; the light holds close.
+  { lightDistance: 0.34, lightIntensity: 0.72, ringSpread: 0.55, ringTilt: 0.04, alignment: 0.95 },
+  // 8 — What they say. Still. Let the quotes hold the page.
   { lightDistance: 0.28, lightIntensity: 0.78, ringSpread: 0.48, ringTilt: 0.02, alignment: 0.98 },
-  // 8 — Now. Light at the front, steady. Rings level. Motion stops.
+  // 9 — Now. Light at the front, steady. Rings level. Motion stops.
   { lightDistance: 0.15, lightIntensity: 1.0, ringSpread: 0.4, ringTilt: 0.0, alignment: 1.0 },
 ];
 

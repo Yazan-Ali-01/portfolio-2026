@@ -60,9 +60,9 @@ import { story } from '../content/story';
 
   .rail__tick {
     display: block;
-    width: 1.15rem;
+    width: 1rem;
     height: 1px;
-    background: var(--ink-faint);
+    background: var(--line);
     transition:
       width 0.4s ease,
       background-color 0.4s ease;
@@ -72,8 +72,14 @@ import { story } from '../content/story';
     background: var(--ink-muted);
   }
 
-  .rail__link[data-active='true'] .rail__tick {
-    width: 2.5rem;
+  /* Read as a progress bar: covered ground is lit, the road ahead is not. */
+  .rail__link[data-state='past'] .rail__tick {
+    width: 1.6rem;
+    background: var(--ink-faint);
+  }
+
+  .rail__link[data-state='current'] .rail__tick {
+    width: 2.6rem;
     background: var(--accent);
   }
 </style>

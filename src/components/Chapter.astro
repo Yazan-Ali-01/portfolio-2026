@@ -7,11 +7,21 @@ interface Props {
 
 const { chapter } = Astro.props;
 const isOpening = chapter.index === 0;
+
+/*
+ * Height by weight. Every chapter used to claim a full screen regardless of
+ * whether it held 53 words or 143, which made the story cost nine screens of
+ * scrolling for 744 words. Short beats now take the room they need.
+ */
+const words = chapter.paragraphs.join(' ').replace(/<[^>]+>/g, '').trim().split(/\s+/).length;
+const size = isOpening ? 'open' : words > 110 ? 'long' : 'short';
 ---
 
-<section class="chapter" id={chapter.id} data-chapter={chapter.index}>
+<section class="chapter" id={chapter.id} data-chapter={chapter.index} data-size={size}>
   <div class="u-shell--story">
     <div class="u-col">
+      {chapter.dateline && <p class="chapter__dateline">{chapter.dateline}</p>}
+
       {
         isOpening ? (
           <h1 class="chapter__hero">{chapter.hero}</h1>
@@ -21,6 +31,14 @@ const isOpening = chapter.index === 0;
       }
 
       {chapter.paragraphs.map((p) => <p set:html={p} />)}
+
+      {
+        chapter.cta && (
+          <a class="chapter__cta" href={chapter.cta.href}>
+            {chapter.cta.label}
+          </a>
+        )
+      }
 
       {
         chapter.aside && (
@@ -40,10 +58,32 @@ const isOpening = chapter.index === 0;
 
 <style>
   .chapter {
-    min-height: 100svh;
     display: flex;
     align-items: center;
+    padding-block: var(--space-lg);
+  }
+
+  .chapter[data-size='open'] {
+    min-height: 100svh;
     padding-block: var(--space-xl);
+  }
+
+  .chapter[data-size='long'] {
+    min-height: 84svh;
+  }
+
+  .chapter[data-size='short'] {
+    min-height: 58svh;
+  }
+
+  /* Place, and ideally the year. The first fact a stranger meets. */
+  .chapter__dateline {
+    font-family: var(--face-meta);
+    font-size: var(--text-xs);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: var(--space-sm);
   }
 
   /* The opening line is the page's h1 and its LCP element. */
@@ -75,6 +115,22 @@ const isOpening = chapter.index === 0;
   .chapter :global(em) {
     font-style: italic;
     color: var(--ink);
+  }
+
+  .chapter__cta {
+    display: inline-block;
+    margin-top: var(--space-xs);
+    font-family: var(--face-meta);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 0.15em;
+  }
+
+  .chapter__cta:hover {
+    color: var(--accent);
   }
 
   .aside {

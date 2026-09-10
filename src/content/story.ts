@@ -6,7 +6,8 @@
  * every chapter has a corresponding keyframe.
  *
  * The work section that used to sit at index 7 was removed: the studio at /work
- * is where the projects live now, and the story is narrative only.
+ * is where the projects live now. A short bridge chapter took its place, so the
+ * recommendations land on a reader who has seen what the work is.
  *
  * TIMELINE CONSTRAINT: chapters 6 and 7 total two months of job hunting, matching
  * BeIn Media ending Feb 2023 and Royal Class starting Apr 2023. If either the CV
@@ -19,8 +20,16 @@ export type Chapter =
       id: string;
       index: number;
       title: string;
+      /**
+       * Set on chapter 0 only. Place, and ideally the year — it is the first
+       * fact a stranger meets and it is what stops the opening reading as a
+       * riddle. TODO: add the year, e.g. 'Latakia, Syria · 2018'.
+       */
+      dateline?: string;
       /** Set on chapter 0 only. The page's h1 and its LCP element. */
       hero?: string;
+      /** A door out of the narrative, for the chapter that points at the work. */
+      cta?: { href: string; label: string };
       /**
        * Authored HTML, trusted because it is written here and nowhere else.
        * `<em>` is the only tag used — for emphasis the spec calls for in prose.
@@ -37,9 +46,12 @@ export const story: Chapter[] = [
     id: 'opening',
     index: 0,
     title: 'Opening',
+    dateline: `Latakia, Syria`,
     hero: `Eighty-three percent.`,
     paragraphs: [
-      `That was my score. Not enough, as it turned out, and not because I couldn’t handle the material. Too many people wanted the same seats, so the cutoff landed wherever the top scores landed that year.`,
+      `That was my score. It decided what I was allowed to study, and it wasn’t enough for the thing I actually wanted.`,
+      `Six years on I’m a senior engineer in Dubai. Self-taught, no degree, never went back for it. This is what happened in between.`,
+      `Not that I couldn’t handle the material, by the way. Too many people wanted the same seats, so the cutoff landed wherever the top scores landed that year.`,
       `I wanted computer science. What I got was electrical engineering.`,
     ],
     sceneNote: `Light distant, rings wide and cold.`,
@@ -126,20 +138,31 @@ export const story: Chapter[] = [
     sceneNote: `Light recovers past its previous position. Rings level out.`,
   },
   {
+    kind: 'prose',
+    id: 'what-came-of-it',
+    index: 7,
+    title: 'What came of it',
+    paragraphs: [
+      `A property search rebuilt around one canonical hierarchy. A multi-tenant legal platform isolated at the database itself. The frontend of an Arabic answer engine, rebuilt around streaming.`,
+      `That is the short version. The engineering is next door.`,
+    ],
+    cta: { href: '/work', label: 'See the work' },
+    sceneNote: `Nearly still. The light holds close.`,
+  },
+  {
     kind: 'recommendations',
     id: 'what-they-say',
-    index: 7,
+    index: 8,
     title: 'What they say',
     sceneNote: `Still. Let the quotes hold the page.`,
   },
   {
     kind: 'prose',
     id: 'now',
-    index: 8,
+    index: 9,
     title: 'Now',
     paragraphs: [
       `Six years in. Self-taught, no degree, still learning every single day, and not as some virtue I’m advertising. It’s a job requirement.`,
-      `What I’m after is work with real ownership. End to end, on a system that’s genuinely interesting, where the technical calls are mine to make and mine to defend. Senior, lead, whatever the title says matters less to me than whether the work pushes.`,
       `That’s why I became a software engineer in the first place. Still is.`,
     ],
     sceneNote: `Light arrives at the front, steady. Rings level. Motion stops.`,

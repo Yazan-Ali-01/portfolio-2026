@@ -1,6 +1,10 @@
 import { subscribeStoryState } from '../lib/story-state';
 
-/** Lights the tick for the chapter currently being read. */
+/**
+ * Marks each tick past, current or ahead, so the rail reads as progress rather
+ * than a static list. A reader three screens in can see how much is left, which
+ * is exactly the moment people decide whether to keep going.
+ */
 export function connectRail(): void {
   const links = Array.from(document.querySelectorAll<HTMLElement>('[data-rail]'));
   if (links.length === 0) return;
@@ -10,7 +14,8 @@ export function connectRail(): void {
     if (chapter === active) return;
     active = chapter;
     for (const link of links) {
-      link.dataset.active = String(Number(link.dataset.rail) === chapter);
+      const index = Number(link.dataset.rail);
+      link.dataset.state = index < chapter ? 'past' : index === chapter ? 'current' : 'ahead';
     }
   });
 }

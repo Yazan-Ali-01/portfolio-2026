@@ -37,6 +37,12 @@ import { meta } from '../content/meta';
 
       <footer class="contact u-shell--story" id="contact">
         <div class="u-col">
+          <p class="contact__pitch">
+            What I’m after is work with real ownership. End to end, on a system that’s
+            genuinely interesting, where the technical calls are mine to make and mine to
+            defend. Senior, lead, whatever the title says matters less to me than whether
+            the work pushes.
+          </p>
           <a class="contact__mail" href={`mailto:${meta.email}`}>{meta.email}</a>
           <p class="contact__links">
             <a href={meta.linkedin} rel="me" data-ev="contact_click" data-ev-channel="linkedin">LinkedIn</a>
@@ -87,6 +93,12 @@ import { meta } from '../content/meta';
 
   .contact {
     padding-block: var(--space-lg) var(--space-2xl);
+  }
+
+  .contact__pitch {
+    color: var(--ink-muted);
+    max-width: var(--measure);
+    margin-bottom: var(--space-md);
   }
 
   .contact__mail {
