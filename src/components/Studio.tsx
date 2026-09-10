@@ -75,7 +75,13 @@ export default function Studio({ artifacts, notes }: Props) {
             Math.max(anchor.x, halfW + pad),
             Math.max(halfW + pad, host.clientWidth - halfW - pad),
           );
-          const y = Math.max(anchor.y, node.offsetHeight + pad);
+          // Wall posters sit high, so their card would land on top of the
+          // section links. Push it clear of them when there is room.
+          const nav = document.querySelector('.studio__nav');
+          const guard = nav
+            ? nav.getBoundingClientRect().bottom - host.getBoundingClientRect().top
+            : 0;
+          const y = Math.max(anchor.y, node.offsetHeight + Math.max(pad, guard + pad));
           node.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -100%)`;
         }
       };
