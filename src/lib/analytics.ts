@@ -16,7 +16,8 @@ import { meta } from '../content/meta';
  *   2. `navigator.webdriver`. Playwright, Puppeteer and Selenium all set it.
  *   3. Self-exclusion: load any page with `?analytics=off` once on a browser to
  *      stop counting your own visits there, `?analytics=on` to resume. Stored in
- *      localStorage, so it survives across the whole site.
+ *      localStorage, so it survives across the whole site. Also wired into
+ *      Vercel's `beforeSend`, so an event cannot escape even if one slips past.
  *
  * `?analytics=force` bypasses gates 1 and 2 for the duration of the tab, so
  * tools/analytics-check.mjs can exercise the loader locally. It never bypasses
@@ -27,8 +28,7 @@ type Props = Record<string, string | number | boolean>;
 
 declare global {
   interface Window {
-    va?: (...args: unknown[]) => void;
-    vaq?: unknown[][];
+    // va and vaq are declared by @vercel/analytics; redeclaring them conflicts.
     clarity?: (...args: unknown[]) => void;
   }
 }
@@ -37,6 +37,9 @@ const OPT_OUT_KEY = 'yz_optout';
 const FORCE_KEY = 'yz_force_analytics';
 const seen = new Set<string>();
 let excluded = false;
+let ready = false;
+/** Events fired before the scripts land, flushed once they do. */
+const pending: [string, Props | undefined][] = [];
 
 function resolveOptOut(): boolean {
   try {
@@ -70,6 +73,10 @@ function isCountableVisit(): boolean {
 /** Fire an event. Safe to call before the scripts land — Vercel queues on `vaq`. */
 export function track(name: string, props?: Props): void {
   if (excluded) return;
+  if (!ready) {
+    pending.push([name, props]);
+    return;
+  }
   try {
     window.va?.('event', { name, ...props });
   } catch {
@@ -87,6 +94,12 @@ export function trackOnce(key: string, name: string, props?: Props): void {
   if (seen.has(key)) return;
   seen.add(key);
   track(name, props);
+}
+
+function flush(): void {
+  ready = true;
+  const queued = pending.splice(0, pending.length);
+  for (const [name, props] of queued) track(name, props);
 }
 
 function loadScript(src: string): void {
@@ -161,18 +174,27 @@ export function initAnalytics(): void {
   excluded = resolveOptOut() || !isCountableVisit();
   if (excluded) return;
 
-  // Queue shim, so events fired before the scripts land are not lost.
-  window.va =
-    window.va ??
-    function (...args: unknown[]) {
-      (window.vaq ??= []).push(args);
-    };
-
   wireClicks();
 
   whenIdle(() => {
-    loadScript('/_vercel/insights/script.js');
-    loadScript('/_vercel/speed-insights/script.js');
+    /*
+     * Vercel's own injectors, not a hand-rolled script tag. The raw
+     * /_vercel/insights/script.js loads happily on its own and then tracks
+     * nothing: it needs the data-sdkn and data-sdkv attributes that inject()
+     * sets. That cost a day of "why are there no page views".
+     *
+     * Dynamically imported so neither package is on the critical path.
+     */
+    void Promise.all([import('@vercel/analytics'), import('@vercel/speed-insights')])
+      .then(([analytics, speed]) => {
+        analytics.inject({ beforeSend: (event) => (excluded ? null : event) });
+        speed.injectSpeedInsights();
+      })
+      .catch(() => {
+        /* analytics must never break the page */
+      })
+      .finally(flush);
+
     if (meta.clarityId) loadClarity(meta.clarityId);
   });
 }

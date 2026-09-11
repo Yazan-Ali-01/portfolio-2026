@@ -40,19 +40,33 @@ export default function Studio({ artifacts, notes }: Props) {
       // The name follows the artifact. Position is written straight to the node
       // every frame — routing it through state would re-render at 60fps for a
       // value that only ever moves a transform.
+      // Touch never hovers, so on a touch device the card is driven by taps and
+      // the hover stream is ignored entirely. Otherwise a tapped note would be
+      // wiped by the very next frame reporting "nothing hovered".
+      const touch = !window.matchMedia('(hover: hover)').matches;
+
       let shown = '';
-      const onHover = (anchor: HoverAnchor) => {
+      const place = (anchor: HoverAnchor) => {
+        const node = labelRef.current;
+        if (!node || !anchor) return;
+        const pad = 14;
+        const halfW = node.offsetWidth / 2;
+        const nav = document.querySelector('.studio__nav');
+        const guard = nav
+          ? nav.getBoundingClientRect().bottom - host.getBoundingClientRect().top
+          : 0;
+        const x = Math.min(
+          Math.max(anchor.x, halfW + pad),
+          Math.max(halfW + pad, host.clientWidth - halfW - pad),
+        );
+        const y = Math.max(anchor.y, node.offsetHeight + Math.max(pad, guard + pad));
+        node.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -100%)`;
+      };
+
+      const show = (anchor: HoverAnchor) => {
         const key = anchor ? `${anchor.kind}:${anchor.name}` : '';
         if (key !== shown) {
           shown = key;
-          if (anchor) {
-            // Whether anyone actually explores the room, rather than scrolling
-            // past it to the index below.
-            trackOnce('studio:used', 'studio_used');
-            if (anchor.kind === 'note') {
-              trackOnce(`note:${anchor.name}`, 'note_open', { note: anchor.name });
-            }
-          }
           setHover(
             anchor
               ? {
@@ -62,28 +76,22 @@ export default function Studio({ artifacts, notes }: Props) {
                 }
               : null,
           );
-          // Only the projects go anywhere, so only they get a pointer.
           host.style.cursor = anchor?.kind === 'project' ? 'pointer' : '';
         }
-        const node = labelRef.current;
-        if (node && anchor) {
-          // Keep the card on screen: props near the walls would otherwise centre
-          // their label past the edge of the canvas and get clipped.
-          const pad = 14;
-          const halfW = node.offsetWidth / 2;
-          const x = Math.min(
-            Math.max(anchor.x, halfW + pad),
-            Math.max(halfW + pad, host.clientWidth - halfW - pad),
-          );
-          // Wall posters sit high, so their card would land on top of the
-          // section links. Push it clear of them when there is room.
-          const nav = document.querySelector('.studio__nav');
-          const guard = nav
-            ? nav.getBoundingClientRect().bottom - host.getBoundingClientRect().top
-            : 0;
-          const y = Math.max(anchor.y, node.offsetHeight + Math.max(pad, guard + pad));
-          node.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -100%)`;
+        // Position after the state lands, so the card has been measured.
+        requestAnimationFrame(() => place(anchor));
+        place(anchor);
+      };
+
+      const onHover = (anchor: HoverAnchor) => {
+        if (touch) return;
+        if (anchor) {
+          trackOnce('studio:used', 'studio_used');
+          if (anchor.kind === 'note') {
+            trackOnce(`note:${anchor.name}`, 'note_open', { note: anchor.name });
+          }
         }
+        show(anchor);
       };
 
       const studio = createStudio(canvas, artifacts, { compact, notes, onHover });
@@ -127,10 +135,19 @@ export default function Studio({ artifacts, notes }: Props) {
         // Resolve where the click actually landed. Relying on hover state meant
         // taps never opened anything, because touch never hovers.
         const [nx, ny] = toNdc(event);
-        const id = studio.pickAt(nx, ny);
-        if (!id) return;
-        track('artifact_open', { project: id });
-        window.location.href = `/work/${id}`;
+        const found = studio.probeAt(nx, ny);
+        if (found && 'project' in found) {
+          track('artifact_open', { project: found.project });
+          window.location.href = `/work/${found.project}`;
+          return;
+        }
+        // A note, or nothing. On touch a tap is the only way to open a note, and
+        // tapping empty space dismisses whatever is open.
+        if (found) {
+          trackOnce('studio:used', 'studio_used');
+          trackOnce(`note:${found.name}`, 'note_open', { note: found.name });
+        }
+        show(found);
       };
 
       host.addEventListener('pointermove', onMove);

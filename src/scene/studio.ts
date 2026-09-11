@@ -75,7 +75,15 @@ export type StudioController = {
    * Raycast at a point, right now. Not the hovered object: a tap produces no
    * hover, so reading hover state meant touch taps resolved to nothing.
    */
-  pickAt: (nx: number, ny: number) => string | null;
+  /**
+   * What is at a point, right now. Not the hovered object: a tap produces no
+   * hover, so reading hover state meant taps resolved to nothing.
+   *
+   * Precedence matters. A direct hit on anything beats the proximity fallback,
+   * or tapping the keyboard would open whichever monitor happened to be within
+   * a thumb's width of it.
+   */
+  probeAt: (nx: number, ny: number) => { project: string } | HoverAnchor;
   setActive: (on: boolean) => void;
   dispose: () => void;
 };
@@ -126,7 +134,7 @@ export function createStudio(
   // Phones crop the room rather than shrink it. Fitting the full width into a
   // 390px viewport pushed the camera so far back the desk read as distant.
   const CONTENT = opts.compact
-    ? { halfWidth: 3.25, halfHeight: 2.45, z: -2 }
+    ? { halfWidth: 3.85, halfHeight: 2.45, z: -2 }
     : { halfWidth: 4.8, halfHeight: 3.5, z: -2 };
   function fit(aspect: number) {
     const halfFov = (camera.fov * Math.PI) / 360;
@@ -792,19 +800,39 @@ export function createStudio(
       lookTarget.y = Math.max(-1, Math.min(1, dy));
       start();
     },
-    pickAt(nx, ny) {
+    probeAt(nx, ny) {
       raycaster.setFromCamera(ndc.set(nx, ny), camera);
-      const direct = raycaster.intersectObjects(pickable, false)[0]?.object as Mesh | undefined;
-      if (direct) return direct.userData.id as string;
 
-      // A finger is wider than a cursor. If the ray missed everything, take the
-      // nearest artifact within roughly a thumb's width on screen.
+      // 1. A direct hit on a project.
+      const onProject = raycaster.intersectObjects(pickable, false)[0]?.object as Mesh | undefined;
+      if (onProject) return { project: onProject.userData.id as string };
+
+      // 2. A direct hit on a desk note.
+      const onNote = raycaster.intersectObjects(noteMeshes, false)[0]?.object as Mesh | undefined;
+      if (onNote) {
+        const spec = onNote.userData.note as DeskNoteSpec;
+        onNote.getWorldPosition(probe);
+        probe.y = onNote.userData.anchorY as number;
+        probe.project(camera);
+        return {
+          kind: 'note',
+          name: spec.title,
+          body: spec.body,
+          x: (probe.x * 0.5 + 0.5) * size.w,
+          y: (-probe.y * 0.5 + 0.5) * size.h,
+        };
+      }
+
+      // 3. Missed everything. A finger is wider than a cursor, and a mate gourd
+      //    is about twenty pixels across on a phone, so fall back to whatever is
+      //    nearest on screen: project or note, whichever is genuinely closer.
       const tapX = (nx * 0.5 + 0.5) * size.w;
       const tapY = (-ny * 0.5 + 0.5) * size.h;
-      const limit = Math.min(size.w, size.h) * 0.13;
+      const limit = Math.min(size.w, size.h) * 0.12;
+
       let best: Mesh | null = null;
       let bestDistance = Infinity;
-      for (const mesh of pickable) {
+      for (const mesh of [...pickable, ...noteMeshes]) {
         mesh.getWorldPosition(probe);
         probe.project(camera);
         const dx = (probe.x * 0.5 + 0.5) * size.w - tapX;
@@ -815,7 +843,21 @@ export function createStudio(
           best = mesh;
         }
       }
-      return bestDistance <= limit ? ((best?.userData.id as string) ?? null) : null;
+      if (!best || bestDistance > limit) return null;
+
+      if (pickable.includes(best)) return { project: best.userData.id as string };
+
+      const spec = best.userData.note as DeskNoteSpec;
+      best.getWorldPosition(probe);
+      probe.y = best.userData.anchorY as number;
+      probe.project(camera);
+      return {
+        kind: 'note',
+        name: spec.title,
+        body: spec.body,
+        x: (probe.x * 0.5 + 0.5) * size.w,
+        y: (-probe.y * 0.5 + 0.5) * size.h,
+      };
     },
     setActive(on) {
       active = on;

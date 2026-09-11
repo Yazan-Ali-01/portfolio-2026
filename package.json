@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@astrojs/preact": "^6.0.5",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "astro": "^7.3.1",
     "gsap": "^3.15.0",
     "preact": "^10.29.8",
