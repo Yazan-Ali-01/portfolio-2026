@@ -43,6 +43,25 @@ and the audit asserted exactly that. It now ships a small deferred module, so th
 assertion is "no render-blocking scripts": every executable script must be a
 module or explicitly defer/async. LCP is unchanged.
 
+**Two things about verifying Vercel Web Analytics, both learned the hard way.**
+
+The raw `/_vercel/insights/script.js` serves fine on its own and then tracks
+nothing. It needs the `data-sdkn` and `data-sdkv` attributes that the package's
+`inject()` sets, which is why hand-rolling the script tag produced sessions in
+Clarity but zero page views in Vercel. Use `@vercel/analytics`, not a script tag.
+
+And **the script refuses to run under automation**, by its own first check:
+
+```js
+function t(){ return !!(navigator.webdriver || navigator.userAgent.includes("Headless")) }
+if (t()) return;
+```
+
+So no headless browser can ever observe a Vercel page view beacon. Confirming it
+works means loading the site in a real browser and looking at the dashboard.
+Clarity has no such guard, which is exactly why test traffic polluted it and the
+containment below exists.
+
 **Analytics only run on the real site.** Three independent gates, added after
 test traffic from the browser tooling reached Clarity before launch:
 
