@@ -38,7 +38,9 @@ const artifacts = [
     <div class="studio__head u-shell--story">
       <h1 class="work__head">Under the lamp</h1>
       <p class="work__lede">
-        Three systems I owned end to end. Drag to look, click to open.
+        Three systems I owned end to end.{' '}
+        <span class="hint hint--pointer">Drag to look around, click a screen to open it.</span>
+        <span class="hint hint--touch">Swipe to look around, tap a screen to open it.</span>
       </p>
     </div>
   </div>
@@ -103,6 +105,23 @@ const artifacts = [
 
   .studio__head .work__back {
     margin-bottom: var(--space-sm);
+  }
+
+  /* Say the right verb for the device. No JS: the pointer media query knows. */
+  .hint {
+    display: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .hint--pointer {
+      display: inline;
+    }
+  }
+
+  @media not all and (hover: hover) {
+    .hint--touch {
+      display: inline;
+    }
   }
 
   .studio__head .work__lede {

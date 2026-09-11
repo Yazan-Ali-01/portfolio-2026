@@ -104,10 +104,16 @@ export default function Studio({ artifacts, notes }: Props) {
       });
       io.observe(host);
 
-      const onMove = (event: PointerEvent) => {
+      const toNdc = (event: { clientX: number; clientY: number }) => {
         const box = host.getBoundingClientRect();
-        const nx = ((event.clientX - box.left) / box.width) * 2 - 1;
-        const ny = -(((event.clientY - box.top) / box.height) * 2 - 1);
+        return [
+          ((event.clientX - box.left) / box.width) * 2 - 1,
+          -(((event.clientY - box.top) / box.height) * 2 - 1),
+        ] as const;
+      };
+
+      const onMove = (event: PointerEvent) => {
+        const [nx, ny] = toNdc(event);
         studio.setPointer(nx, ny);
         studio.setDrag(nx, ny);
       };
@@ -117,8 +123,11 @@ export default function Studio({ artifacts, notes }: Props) {
         studio.setDrag(0, 0);
       };
 
-      const onClick = () => {
-        const id = studio.pick();
+      const onClick = (event: MouseEvent) => {
+        // Resolve where the click actually landed. Relying on hover state meant
+        // taps never opened anything, because touch never hovers.
+        const [nx, ny] = toNdc(event);
+        const id = studio.pickAt(nx, ny);
         if (!id) return;
         track('artifact_open', { project: id });
         window.location.href = `/work/${id}`;

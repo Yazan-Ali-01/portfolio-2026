@@ -71,7 +71,11 @@ export type StudioController = {
   resize: (w: number, h: number) => void;
   setPointer: (x: number, y: number) => void;
   setDrag: (dx: number, dy: number) => void;
-  pick: () => string | null;
+  /**
+   * Raycast at a point, right now. Not the hovered object: a tap produces no
+   * hover, so reading hover state meant touch taps resolved to nothing.
+   */
+  pickAt: (nx: number, ny: number) => string | null;
   setActive: (on: boolean) => void;
   dispose: () => void;
 };
@@ -119,7 +123,11 @@ export function createStudio(
   renderer.shadowMap.type = PCFSoftShadowMap;
 
   /** Framing is computed from content bounds, not hardcoded per breakpoint. */
-  const CONTENT = { halfWidth: 4.8, halfHeight: 3.5, z: -2 };
+  // Phones crop the room rather than shrink it. Fitting the full width into a
+  // 390px viewport pushed the camera so far back the desk read as distant.
+  const CONTENT = opts.compact
+    ? { halfWidth: 3.25, halfHeight: 2.45, z: -2 }
+    : { halfWidth: 4.8, halfHeight: 3.5, z: -2 };
   function fit(aspect: number) {
     const halfFov = (camera.fov * Math.PI) / 360;
     const forHeight = CONTENT.halfHeight / Math.tan(halfFov);
@@ -676,6 +684,8 @@ export function createStudio(
   // The label is positioned in screen space rather than pinned to a corner, so
   // it names the thing the pointer is actually on.
   const anchor = new Vector3();
+  const probe = new Vector3();
+  const ndc = new Vector2();
   const size = { w: 1, h: 1 };
   let hoveredNote: Mesh | null = null;
 
@@ -695,7 +705,7 @@ export function createStudio(
     look.y += (lookTarget.y - look.y) * ease;
 
     camera.position.set(HOME.x + look.x * 1.5, HOME.y + look.y * 0.7, HOME.z);
-    camera.lookAt(look.x * 0.5, -0.05, -2);
+    camera.lookAt(look.x * 0.5, opts.compact ? -0.28 : -0.05, -2);
 
     raycaster.setFromCamera(pointer, camera);
     const front = raycaster.intersectObjects([...pickable, ...noteMeshes], false)[0]
@@ -782,7 +792,31 @@ export function createStudio(
       lookTarget.y = Math.max(-1, Math.min(1, dy));
       start();
     },
-    pick: () => (hovered?.userData.id as string) ?? null,
+    pickAt(nx, ny) {
+      raycaster.setFromCamera(ndc.set(nx, ny), camera);
+      const direct = raycaster.intersectObjects(pickable, false)[0]?.object as Mesh | undefined;
+      if (direct) return direct.userData.id as string;
+
+      // A finger is wider than a cursor. If the ray missed everything, take the
+      // nearest artifact within roughly a thumb's width on screen.
+      const tapX = (nx * 0.5 + 0.5) * size.w;
+      const tapY = (-ny * 0.5 + 0.5) * size.h;
+      const limit = Math.min(size.w, size.h) * 0.13;
+      let best: Mesh | null = null;
+      let bestDistance = Infinity;
+      for (const mesh of pickable) {
+        mesh.getWorldPosition(probe);
+        probe.project(camera);
+        const dx = (probe.x * 0.5 + 0.5) * size.w - tapX;
+        const dy = (-probe.y * 0.5 + 0.5) * size.h - tapY;
+        const distance = Math.hypot(dx, dy);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = mesh;
+        }
+      }
+      return bestDistance <= limit ? ((best?.userData.id as string) ?? null) : null;
+    },
     setActive(on) {
       active = on;
       if (!on) stop();
