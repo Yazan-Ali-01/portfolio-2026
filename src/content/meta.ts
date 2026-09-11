@@ -6,7 +6,7 @@ export const meta = {
   linkedin: 'https://www.linkedin.com/in/yazan-ali/',
   github: 'https://github.com/Yazan-Ali-01',
   title: 'Yazan Ali — Software Engineer',
-  description: `A door closed by a number, and every year after spent building doors that open by hand.`,
+  description: `They gave me electrical engineering. I took computer science anyway.`,
   lang: 'en',
   /** Taken from the existing site's structured data. Change if the domain moves. */
   siteUrl: 'https://www.yazan-ali.net',

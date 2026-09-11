@@ -41,9 +41,14 @@ a nav bar, not a door.
 
 ## Build notes
 
-The through-line of the whole site is about doors, so the door is the page: the
-statement *"A door closed by a number, and every year after spent building doors
-that open by hand"* is the gate's `h1` and its LCP element.
+The gate's `h1` is *"They gave me electrical engineering. I took computer science
+anyway."* It replaced a door metaphor that had the same fault as the old story
+opening: two figures of speech stacked on each other, and nothing concrete to hold.
+
+The line does the whole job in nine words. Constraint, refusal and outcome, with
+no metaphor to decode, and "anyway" carries the family pushback, the night study
+and the abandoned degree without naming any of them. It is also the `og:description`,
+so it is the caption under every share card.
 
 **The two doors are deliberately asymmetrical.** The story door makes a promise.
 The work door shows what is behind it — all three projects with their real status.
