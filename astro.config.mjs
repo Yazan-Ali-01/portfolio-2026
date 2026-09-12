@@ -1,11 +1,18 @@
 // @ts-check
 import { defineConfig, fontProviders } from 'astro/config';
 import preact from '@astrojs/preact';
+import sitemap from '@astrojs/sitemap';
 
 // Preact exists solely to host the three.js island (E03). Nothing else hydrates.
 export default defineConfig({
   site: 'https://www.yazan-ali.net',
-  integrations: [preact()],
+  integrations: [
+    preact(),
+    sitemap({
+      // /og and /og/* exist only to be screenshotted into share cards.
+      filter: (page) => !page.includes('/og'),
+    }),
+  ],
   vite: {
     optimizeDeps: {
       // These are only reached through dynamic imports, so Vite discovers them

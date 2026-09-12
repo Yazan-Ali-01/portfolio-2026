@@ -1,0 +1,130 @@
+---
+import Font from 'astro/components/Font.astro';
+import { getCollection } from 'astro:content';
+import { projects } from '../../content/projects';
+import { meta } from '../../content/meta';
+import '../../styles/tokens.css';
+
+/**
+ * One share card per case study, at exactly 1200x630. Rendered as real pages so
+ * `node tools/og.mjs` can screenshot them whenever the copy changes.
+ */
+export async function getStaticPaths() {
+  const entries = await getCollection('caseStudies');
+  return entries.map((entry) => ({
+    params: { slug: entry.data.project },
+    props: { entry, project: projects.find((p) => p.id === entry.data.project)! },
+  }));
+}
+
+const { entry, project } = Astro.props;
+---
+
+<html lang="en" data-world="work">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <title>{`OG — ${project.name}`}</title>
+    <Font cssVariable="--font-grotesque" preload />
+    <Font cssVariable="--font-meta" />
+  </head>
+  <body>
+    <div class="card">
+      <p class="mark">{meta.siteUrl.replace('https://', '')}</p>
+
+      <div class="body">
+        <p class="eyebrow">{project.name}</p>
+        <p class="title">{entry.data.title}</p>
+      </div>
+
+      <div class="foot">
+        <span class="who">{meta.name}</span>
+        <span class="role">{entry.data.role}</span>
+        <span class="status">{entry.data.status}</span>
+      </div>
+    </div>
+
+    <style>
+      body {
+        margin: 0;
+        background: var(--ground);
+      }
+
+      .card,
+      .card * {
+        box-sizing: border-box;
+      }
+
+      .card {
+        width: 1200px;
+        height: 630px;
+        padding: 76px 88px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        gap: 22px;
+        color: var(--ink);
+        background:
+          radial-gradient(ellipse 46% 110% at 90% 40%, rgba(139, 92, 246, 0.22), transparent 62%),
+          linear-gradient(var(--line) 1px, transparent 1px) center / 100% 72px,
+          linear-gradient(90deg, var(--line) 1px, transparent 1px) center / 72px 100%,
+          var(--ground);
+      }
+
+      .mark {
+        margin: 0;
+        font-family: var(--font-meta), sans-serif;
+        font-size: 20px;
+        color: var(--ink-muted);
+      }
+
+      /* The headline block sits on the baseline; the mark holds the top. */
+      .body {
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+      }
+
+      .eyebrow {
+        margin: 0;
+        font-family: var(--font-meta), sans-serif;
+        font-size: 22px;
+        font-weight: 600;
+        color: var(--accent);
+      }
+
+      .title {
+        margin: 0;
+        font-family: var(--font-grotesque), sans-serif;
+        font-weight: 600;
+        font-size: 72px;
+        line-height: 1.02;
+        letter-spacing: -0.035em;
+        max-width: 17ch;
+      }
+
+      .foot {
+        display: flex;
+        align-items: baseline;
+        gap: 18px;
+        padding-top: 26px;
+        border-top: 1px solid var(--line);
+        font-family: var(--font-meta), sans-serif;
+        font-size: 19px;
+      }
+
+      .who {
+        font-weight: 600;
+      }
+
+      .role,
+      .status {
+        color: var(--ink-muted);
+      }
+
+      .status {
+        margin-left: auto;
+      }
+    </style>
+  </body>
+</html>

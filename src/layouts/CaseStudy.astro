@@ -28,7 +28,13 @@ const index = String(d.order).padStart(2, '0');
 const others = projects.filter((p) => p.id !== project.id);
 ---
 
-<Story world="work" title={`${project.name} — ${d.title} | ${meta.name}`} description={d.lede}>
+<Story
+  world="work"
+  title={`${project.name} — ${d.title} | ${meta.name}`}
+  description={d.lede}
+  image={`/og/${project.id}.jpg`}
+  imageAlt={`${project.name}: ${d.title}`}
+>
   <article class="cs">
     <div class="cs__top u-shell--story">
       <div class="cs__nav">

@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# The OG card pages exist only to be screenshotted into share images.
+Disallow: /og
+
+Sitemap: https://www.yazan-ali.net/sitemap-index.xml
