@@ -27,7 +27,9 @@ export default function Studio({ artifacts, notes }: Props) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    // Reduced motion simplifies the room, it does not delete it. The scene is
+    // built and stays clickable; the camera stops drifting. See `still` below.
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     let disposed = false;
     let cleanup: (() => void) | undefined;
@@ -94,7 +96,7 @@ export default function Studio({ artifacts, notes }: Props) {
         show(anchor);
       };
 
-      const studio = createStudio(canvas, artifacts, { compact, notes, onHover });
+      const studio = createStudio(canvas, artifacts, { compact, notes, onHover, still });
       setReady(true);
 
       const setSize = () => {

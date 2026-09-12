@@ -25,6 +25,7 @@ import {
   Scene,
   SpotLight,
   SRGBColorSpace,
+  LoadingManager,
   TextureLoader,
   Vector2,
   Vector3,
@@ -114,6 +115,12 @@ export function createStudio(
     compact: boolean;
     notes?: DeskNoteSpec[];
     onHover?: (anchor: HoverAnchor) => void;
+    /**
+     * Reduced motion. The room is still built and still answers clicks; what
+     * stops is the drifting camera and every eased transition. Frames are drawn
+     * on demand instead of on a loop, so nothing moves unless the reader does.
+     */
+    still?: boolean;
   },
 ): StudioController {
   const scene = new Scene();
@@ -243,7 +250,16 @@ export function createStudio(
 
   scene.add(room);
 
-  const loaderShared = new TextureLoader();
+  /*
+   * Textures are fetched as images, so they land after the first frame. The
+   * animation loop just draws the next frame with them in it; still mode has no
+   * next frame, so it has to be told to draw one or the screens stay black.
+   */
+  const assets = new LoadingManager();
+  assets.onLoad = () => {
+    if (opts.still) start();
+  };
+  const loaderShared = new TextureLoader(assets);
 
   /*
    * Hoverable props. Unlike the project artifacts these are not clickable — they
@@ -707,7 +723,7 @@ export function createStudio(
   function frame(time: number) {
     const dt = last === 0 ? 0.016 : Math.min((time - last) / 1000, 0.05);
     last = time;
-    const ease = 1 - Math.exp(-6 * dt);
+    const ease = opts.still ? 1 : 1 - Math.exp(-6 * dt);
 
     look.x += (lookTarget.x - look.x) * ease;
     look.y += (lookTarget.y - look.y) * ease;
@@ -767,7 +783,14 @@ export function createStudio(
   }
 
   function start() {
-    if (running || !active) return;
+    if (!active) return;
+    // Still mode draws exactly one frame, here, and then nothing until asked
+    // again. `ease` is 1, so that frame lands on its final values.
+    if (opts.still) {
+      frame(performance.now());
+      return;
+    }
+    if (running) return;
     running = true;
     last = 0;
     renderer.setAnimationLoop(frame);
@@ -796,6 +819,8 @@ export function createStudio(
       start();
     },
     setDrag(dx, dy) {
+      // The parallax is the motion reduced-motion readers asked us to drop.
+      if (opts.still) return;
       lookTarget.x = Math.max(-1, Math.min(1, dx));
       lookTarget.y = Math.max(-1, Math.min(1, dy));
       start();

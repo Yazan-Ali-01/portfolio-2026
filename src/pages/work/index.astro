@@ -41,6 +41,7 @@ const artifacts = [
         Three systems I owned end to end.{' '}
         <span class="hint hint--pointer">Drag to look around, click a screen to open it.</span>
         <span class="hint hint--touch">Swipe to look around, tap a screen to open it.</span>
+        <span class="hint hint--still">Open a screen to read the case study.</span>
       </p>
     </div>
   </div>
@@ -120,6 +121,19 @@ const artifacts = [
 
   @media not all and (hover: hover) {
     .hint--touch {
+      display: inline;
+    }
+  }
+
+  /* Reduced motion keeps the room but stops the camera, so the promise of
+     looking around is no longer true. Only the clicking is. */
+  @media (prefers-reduced-motion: reduce) {
+    .hint--pointer,
+    .hint--touch {
+      display: none;
+    }
+
+    .hint--still {
       display: inline;
     }
   }

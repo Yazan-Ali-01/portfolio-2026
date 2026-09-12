@@ -146,5 +146,52 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
   await ctx.close();
 }
 
+// --- 5. Crawlability and share cards ----------------------------------------
+// Only meaningful against a build: robots.txt and the sitemap are emitted at
+// build time, so run this against `astro preview`, not `astro dev`.
+{
+  const ctx = await browser.newContext();
+  await blockAnalytics(ctx);
+  const page = await ctx.newPage();
+  console.log('\nCrawlability and share cards');
+
+  const robots = await page.goto(BASE + '/robots.txt');
+  const robotsText = robots.status() === 200 ? await robots.text() : '';
+  ok(robots.status() === 200, `robots.txt is served (${robots.status()})`);
+  ok(robotsText.includes('Sitemap:'), 'robots.txt points at the sitemap');
+  ok(robotsText.includes('Disallow: /og'), 'robots.txt keeps crawlers out of /og');
+
+  const index = await page.goto(BASE + '/sitemap-index.xml');
+  ok(index.status() === 200, `sitemap-index.xml is served (${index.status()})`);
+
+  const map = await page.goto(BASE + '/sitemap-0.xml');
+  const xml = map.status() === 200 ? await map.text() : '';
+  for (const route of ['/', '/story/', '/work/', '/work/driven/', '/work/complytude/', '/work/jeem/']) {
+    ok(xml.includes(`<loc>https://www.yazan-ali.net${route}</loc>`), `sitemap lists ${route}`);
+  }
+  ok(!xml.includes('/og'), 'sitemap excludes the card-render pages');
+
+  // A shared case study has to show the case study, not the generic site card.
+  const cards = new Set();
+  for (const slug of ['driven', 'complytude', 'jeem']) {
+    await page.goto(`${BASE}/work/${slug}`, { waitUntil: 'domcontentloaded' });
+    const card = await page.getAttribute('meta[property="og:image"]', 'content');
+    cards.add(card);
+    ok(card?.endsWith(`/og/${slug}.jpg`), `/work/${slug} shares its own card (${card?.split('/').pop()})`);
+    // The tag is absolute and points at production; check the file on the build
+    // under test, not on the live site.
+    const img = await page.goto(`${BASE}/og/${slug}.jpg`);
+    ok(img.status() === 200, `that card file is in the build (${img.status()})`);
+  }
+  ok(cards.size === 3, `the three case studies share three different cards (${cards.size})`);
+
+  // A real unknown route, not /404 itself: requesting the page directly is a
+  // hit on a file that exists, and answers 200.
+  const lost = await page.goto(BASE + '/this-route-does-not-exist');
+  ok(lost.status() === 404, `unknown routes answer 404 (${lost.status()})`);
+  ok((await page.locator('.lost__doors a').count()) === 2, '404 offers both worlds');
+  await ctx.close();
+}
+
 await browser.close();
 console.log(`\n${fail.length === 0 ? 'ALL CHECKS PASS' : fail.length + ' FAILURES'}`);
