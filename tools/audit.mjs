@@ -193,5 +193,73 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
   await ctx.close();
 }
 
+// --- 6. The way out ----------------------------------------------------------
+// A reader who finishes a case study has to be able to reach him from there.
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await blockAnalytics(ctx);
+  const page = await ctx.newPage();
+  console.log('\nContact path');
+
+  for (const route of ['/work', '/work/driven', '/work/complytude', '/work/jeem']) {
+    await page.goto(BASE + route, { waitUntil: 'domcontentloaded' });
+    const mail = page.locator('.close__mail');
+    ok(await mail.count() === 1, `${route} offers an address`);
+    const href = await mail.getAttribute('href');
+    ok(href === 'mailto:yazan.ali.dev@gmail.com', `${route} address is a mailto (${href})`);
+  }
+
+  await page.goto(BASE + '/story', { waitUntil: 'domcontentloaded' });
+  ok(await page.locator('a[href^="mailto:"]').count() >= 1, '/story still closes with an address');
+  await ctx.close();
+}
+
+// --- 7. Keyboard into the room -----------------------------------------------
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await blockAnalytics(ctx);
+  const page = await ctx.newPage();
+  await page.goto(BASE + '/work', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(2500);
+  console.log('\nKeyboard into the room');
+
+  let reached = false;
+  for (let i = 0; i < 8 && !reached; i++) {
+    await page.keyboard.press('Tab');
+    const cls = await page.evaluate(() => document.activeElement?.className || '');
+    reached = String(cls).includes('studio__keys');
+  }
+  ok(reached, 'tabbing reaches the room');
+
+  await page.waitForTimeout(400);
+  ok(await page.locator('.studio__legend').isVisible(), 'focus explains the keys it took');
+
+  const card = page.locator('.studio__label').first();
+  const first = (await card.innerText()).split('\n')[0];
+  ok(await card.isVisible(), `focus lands on something (${first})`);
+
+  // Ten stops: three projects, then seven desk notes, each named once.
+  const walk = new Set([first]);
+  for (let i = 0; i < 9; i++) {
+    await page.keyboard.press('ArrowRight');
+    await page.waitForTimeout(140);
+    walk.add((await card.innerText()).split('\n')[0]);
+  }
+  ok(walk.size === 10, `every item is its own stop (${walk.size} of 10)`);
+
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  ok(!(await card.isVisible()), 'Escape leaves the room');
+
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(200);
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(1200);
+  // `URL` is taken at module scope, so compare the string.
+  const landed = page.url().replace(BASE, '');
+  ok(landed.startsWith('/work/driven'), `Enter opens a project (${landed})`);
+  await ctx.close();
+}
+
 await browser.close();
 console.log(`\n${fail.length === 0 ? 'ALL CHECKS PASS' : fail.length + ' FAILURES'}`);
