@@ -21,8 +21,10 @@ type Hover = { kind: 'project' | 'note'; name: string; body?: string } | null;
 export default function Studio({ artifacts, notes }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
+  const keysRef = useRef<HTMLDivElement>(null);
   const [hover, setHover] = useState<Hover>(null);
   const [ready, setReady] = useState(false);
+  const [keys, setKeys] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -152,11 +154,81 @@ export default function Studio({ artifacts, notes }: Props) {
         show(found);
       };
 
+      /*
+       * The keyboard path into the room (E10-T4).
+       *
+       * The index list under the canvas is still the accessible route and is
+       * never removed; the canvas itself is aria-hidden, so a screen reader
+       * never lands here. This is for the sighted keyboard user, who could see
+       * the room but had no way into it.
+       */
+      const stops = studio.targets();
+      let at = -1;
+
+      const step = (by: number) => {
+        at = (at + by + stops.length) % stops.length;
+        show(studio.focus(at));
+      };
+
+      const onKey = (event: KeyboardEvent) => {
+        switch (event.key) {
+          case 'ArrowRight':
+          case 'ArrowDown':
+            event.preventDefault();
+            step(1);
+            break;
+          case 'ArrowLeft':
+          case 'ArrowUp':
+            event.preventDefault();
+            step(-1);
+            break;
+          case 'Enter':
+          case ' ': {
+            event.preventDefault();
+            if (at < 0) return step(1);
+            const stop = stops[at];
+            if (stop.kind === 'project' && stop.project) {
+              track('artifact_open', { project: stop.project });
+              window.location.href = `/work/${stop.project}`;
+            }
+            break;
+          }
+          case 'Escape':
+            studio.blur();
+            show(null);
+            at = -1;
+            break;
+          default:
+            return;
+        }
+        trackOnce('studio:used', 'studio_used');
+      };
+
+      const onFocus = () => {
+        setKeys(true);
+        if (at < 0) step(1);
+      };
+
+      const onBlur = () => {
+        setKeys(false);
+        studio.blur();
+        show(null);
+        at = -1;
+      };
+
+      const keyHost = keysRef.current;
+      keyHost?.addEventListener('keydown', onKey);
+      keyHost?.addEventListener('focus', onFocus);
+      keyHost?.addEventListener('blur', onBlur);
+
       host.addEventListener('pointermove', onMove);
       host.addEventListener('pointerleave', onLeave);
       host.addEventListener('click', onClick);
 
       cleanup = () => {
+        keyHost?.removeEventListener('keydown', onKey);
+        keyHost?.removeEventListener('focus', onFocus);
+        keyHost?.removeEventListener('blur', onBlur);
         host.removeEventListener('pointermove', onMove);
         host.removeEventListener('pointerleave', onLeave);
         host.removeEventListener('click', onClick);
@@ -175,6 +247,26 @@ export default function Studio({ artifacts, notes }: Props) {
   return (
     <>
       <canvas ref={canvasRef} class="studio__canvas" aria-hidden="true" />
+
+      {/*
+        Focusable, but transparent to the pointer, so a mouse never touches it
+        and the room reads exactly as before. Hidden from assistive tech: the
+        project index below the canvas is that route, and duplicating it here
+        would announce the same three links twice.
+      */}
+      <div
+        ref={keysRef}
+        class="studio__keys"
+        tabIndex={ready ? 0 : -1}
+        aria-hidden="true"
+        hidden={!ready}
+      />
+
+      <p class="studio__legend" hidden={!keys} aria-hidden="true">
+        <span><kbd>←</kbd><kbd>→</kbd> move</span>
+        <span><kbd>Enter</kbd> open</span>
+        <span><kbd>Esc</kbd> leave</span>
+      </p>
       <div
         ref={labelRef}
         class="studio__label"

@@ -275,6 +275,68 @@ body {
   height: 100%;
 }
 
+/*
+ * The keyboard's way in. It covers the room so the focus ring frames what it
+ * controls, and it is transparent to the pointer so a mouse never meets it.
+ * A tabindex element stays keyboard-focusable with pointer-events off.
+ */
+.studio__keys {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 2px;
+}
+
+.studio__keys:focus {
+  outline: none;
+}
+
+.studio__keys:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -6px;
+}
+
+/* Only while the room has keyboard focus: it explains the keys it just took. */
+.studio__legend {
+  /* Bottom right: the heading block owns the bottom left at every width. */
+  position: absolute;
+  right: var(--gutter);
+  bottom: var(--space-sm);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0.4rem 0.75rem;
+  background: rgba(11, 11, 12, 0.92);
+  border: 1px solid var(--line);
+  font-family: var(--face-meta);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  pointer-events: none;
+}
+
+/*
+ * Narrow: the heading block grows to three lines and reaches the bottom right,
+ * so the legend moves to the empty band under the section links instead.
+ */
+@media (max-width: 47.99rem) {
+  .studio__legend {
+    top: 3.6rem;
+    bottom: auto;
+  }
+}
+
+.studio__legend kbd {
+  font-family: var(--face-data, var(--face-meta));
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0.05em 0.35em;
+  margin-right: 0.2em;
+}
+
 .studio__label {
   /* Positioned by the scene each frame, in canvas pixels, above whatever is
      hovered. left/top stay at 0; the transform does the work. */

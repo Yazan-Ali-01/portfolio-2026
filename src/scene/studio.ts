@@ -73,10 +73,6 @@ export type StudioController = {
   setPointer: (x: number, y: number) => void;
   setDrag: (dx: number, dy: number) => void;
   /**
-   * Raycast at a point, right now. Not the hovered object: a tap produces no
-   * hover, so reading hover state meant touch taps resolved to nothing.
-   */
-  /**
    * What is at a point, right now. Not the hovered object: a tap produces no
    * hover, so reading hover state meant taps resolved to nothing.
    *
@@ -85,6 +81,18 @@ export type StudioController = {
    * a thumb's width of it.
    */
   probeAt: (nx: number, ny: number) => { project: string } | HoverAnchor;
+  /**
+   * Everything the keyboard can step through, in the order it should be stepped
+   * through: the three projects first, because those go somewhere, then the
+   * desk notes. Each list is left to right across the room.
+   */
+  targets: () => { kind: 'project' | 'note'; name: string; project?: string }[];
+  /**
+   * Light up target `i` as though the pointer were on it, and hand back the
+   * card to show. Survives until the pointer moves or `blur()` is called.
+   */
+  focus: (i: number) => ({ project: string } & HoverAnchor) | HoverAnchor;
+  blur: () => void;
   setActive: (on: boolean) => void;
   dispose: () => void;
 };
@@ -719,6 +727,8 @@ export function createStudio(
   let running = false;
   let active = true;
   let last = 0;
+  /** Set by the keyboard path; null whenever the pointer is in charge. */
+  let forced: Mesh | null = null;
 
   function frame(time: number) {
     const dt = last === 0 ? 0.016 : Math.min((time - last) / 1000, 0.05);
@@ -735,8 +745,16 @@ export function createStudio(
     const front = raycaster.intersectObjects([...pickable, ...noteMeshes], false)[0]
       ?.object as Mesh | undefined;
     const isProject = !!front && pickable.includes(front);
-    const next = isProject ? front : null;
-    hoveredNote = !front || isProject ? null : front;
+    // Keyboard focus outranks the ray. Moving the pointer clears it, which is
+    // how a mouse takes control back without the two fighting each frame.
+    const next = forced ? (pickable.includes(forced) ? forced : null) : isProject ? front : null;
+    hoveredNote = forced
+      ? pickable.includes(forced)
+        ? null
+        : forced
+      : !front || isProject
+        ? null
+        : front;
     if (next !== hovered) {
       if (hovered) (hovered.userData.shellMat as MeshStandardMaterial).color.set(SHELL);
       hovered = next;
@@ -782,6 +800,64 @@ export function createStudio(
     renderer.render(scene, camera);
   }
 
+  /**
+   * The card for a mesh, with its anchor projected to screen pixels. The tap
+   * path and the keyboard path both go through here, so the two cannot drift.
+   */
+  function anchorOf(mesh: Mesh): ({ project: string } & HoverAnchor) | HoverAnchor {
+    if (pickable.includes(mesh)) {
+      // A point just above the artifact's top edge, in its own local space, so
+      // the group's position, tilt and hover scale are all accounted for.
+      probe.set(0, (mesh.userData.halfHeight as number) + 0.16, 0);
+      mesh.localToWorld(probe);
+      probe.project(camera);
+      return {
+        project: mesh.userData.id as string,
+        kind: 'project',
+        name: mesh.userData.name as string,
+        x: (probe.x * 0.5 + 0.5) * size.w,
+        y: (-probe.y * 0.5 + 0.5) * size.h,
+      };
+    }
+
+    const spec = mesh.userData.note as DeskNoteSpec;
+    mesh.getWorldPosition(probe);
+    probe.y = mesh.userData.anchorY as number;
+    probe.project(camera);
+    return {
+      kind: 'note',
+      name: spec.title,
+      body: spec.body,
+      x: (probe.x * 0.5 + 0.5) * size.w,
+      y: (-probe.y * 0.5 + 0.5) * size.h,
+    };
+  }
+
+  /*
+   * Keyboard order. Projects first, because those navigate somewhere; the desk
+   * notes after. Each group runs left to right across the room, so the highlight
+   * moves the way the eye does.
+   */
+  const spanX = new Map<Mesh, number>();
+  for (const mesh of [...pickable, ...noteMeshes]) {
+    spanX.set(mesh, mesh.getWorldPosition(new Vector3()).x);
+  }
+  const byX = (a: Mesh, b: Mesh) => spanX.get(a)! - spanX.get(b)!;
+
+  // One stop per note, not one per mesh: a prop is several meshes (the gourd,
+  // its straw and the thermos are all "Mate"), and every one of them is
+  // hoverable, but the keyboard should stop at each thing once.
+  const oncePerNote: Mesh[] = [];
+  const claimed = new Set<DeskNoteSpec>();
+  for (const mesh of [...noteMeshes].sort(byX)) {
+    const spec = mesh.userData.note as DeskNoteSpec;
+    if (claimed.has(spec)) continue;
+    claimed.add(spec);
+    oncePerNote.push(mesh);
+  }
+
+  const keyOrder = [...[...pickable].sort(byX), ...oncePerNote];
+
   function start() {
     if (!active) return;
     // Still mode draws exactly one frame, here, and then nothing until asked
@@ -815,6 +891,8 @@ export function createStudio(
       start();
     },
     setPointer(x, y) {
+      // The pointer moved, so it is in charge again.
+      forced = null;
       pointer.set(x, y);
       start();
     },
@@ -883,6 +961,29 @@ export function createStudio(
         x: (probe.x * 0.5 + 0.5) * size.w,
         y: (-probe.y * 0.5 + 0.5) * size.h,
       };
+    },
+    targets() {
+      return keyOrder.map((mesh) =>
+        pickable.includes(mesh)
+          ? {
+              kind: 'project' as const,
+              name: mesh.userData.name as string,
+              project: mesh.userData.id as string,
+            }
+          : { kind: 'note' as const, name: (mesh.userData.note as DeskNoteSpec).title },
+      );
+    },
+    focus(i) {
+      forced = keyOrder[i] ?? null;
+      // Draw before reading the anchor: the projection has to come off the same
+      // frame the reader is about to see, or the card lands where the artifact
+      // used to be.
+      start();
+      return forced ? anchorOf(forced) : null;
+    },
+    blur() {
+      forced = null;
+      start();
     },
     setActive(on) {
       active = on;
