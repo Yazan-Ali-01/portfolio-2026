@@ -6,6 +6,16 @@ import sitemap from '@astrojs/sitemap';
 // Preact exists solely to host the three.js island (E03). Nothing else hydrates.
 export default defineConfig({
   site: 'https://www.yazan-ali.net',
+  /*
+   * The gate is a decision, and the decision leads somewhere heavy: /work boots
+   * three.js. Fetching on hover means the page is usually already in cache by
+   * the time the door is clicked. Hover only, so nothing is fetched speculatively
+   * for a reader who never moves toward it.
+   */
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: 'hover',
+  },
   integrations: [
     preact(),
     sitemap({
