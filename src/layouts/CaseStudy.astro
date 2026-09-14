@@ -1,5 +1,6 @@
 ---
 import Story from './Story.astro';
+import Close from '../components/Close.astro';
 import WorldSwitch from '../components/WorldSwitch.astro';
 import { meta } from '../content/meta';
 import { projects } from '../content/projects';
@@ -135,6 +136,8 @@ const others = projects.filter((p) => p.id !== project.id);
         }
       </ul>
     </nav>
+
+    <Close from={`case:${project.id}`} />
   </article>
 
   <script define:vars={{ slug: project.id }}>

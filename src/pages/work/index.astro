@@ -2,6 +2,7 @@
 import Story from '../../layouts/Story.astro';
 import Studio from '../../components/Studio.tsx';
 import WorldSwitch from '../../components/WorldSwitch.astro';
+import Close from '../../components/Close.astro';
 import { projects } from '../../content/projects';
 import { deskNotes } from '../../content/desk-notes';
 import { meta } from '../../content/meta';
@@ -72,6 +73,8 @@ const artifacts = [
       }
     </ol>
   </div>
+
+  <Close from="work" />
 </Story>
 
 <style>

@@ -1,0 +1,106 @@
+---
+import { meta } from '../content/meta';
+
+/**
+ * The end of the work world.
+ *
+ * The story world closes with a long pitch, earned after ten chapters. The work
+ * side has to do the same job in four lines, because a reader who finishes a
+ * case study is already convinced or already gone. Before this existed, the work
+ * world had no contact path at all: case studies ended by linking to more case
+ * studies.
+ */
+
+interface Props {
+  /** Where the click came from, so the analytics can tell the two apart. */
+  from: string;
+}
+
+const { from } = Astro.props;
+---
+
+<section class="close u-shell--story" id="contact">
+  <p class="close__label">What I’m looking for</p>
+
+  <p class="close__pitch">
+    A senior or lead role where I own a system end to end, and where the hard calls are
+    mine to make. I’m in Dubai. If that’s open on your team, email reaches me fastest.
+  </p>
+
+  <a
+    class="close__mail"
+    href={`mailto:${meta.email}`}
+    data-ev="contact_click"
+    data-ev-channel="email"
+    data-ev-from={from}>{meta.email}</a
+  >
+
+  <p class="close__links">
+    <a href={meta.linkedin} rel="me" data-ev="contact_click" data-ev-channel="linkedin" data-ev-from={from}>
+      LinkedIn
+    </a>
+    <a href={meta.github} rel="me" data-ev="contact_click" data-ev-channel="github" data-ev-from={from}>
+      GitHub
+    </a>
+  </p>
+</section>
+
+<style>
+  .close {
+    padding-block: var(--space-xl) var(--space-2xl);
+    border-top: 1px solid var(--line);
+  }
+
+  .close__label {
+    font-family: var(--face-data, var(--face-meta));
+    font-size: var(--text-xs);
+    color: var(--accent);
+    margin-bottom: var(--space-sm);
+  }
+
+  .close__pitch {
+    font-size: var(--text-lg);
+    color: var(--ink);
+    max-width: 38rem;
+    margin-bottom: var(--space-lg);
+  }
+
+  /*
+   * The address is the largest type on the page after the title. It is the one
+   * thing this section exists to hand over.
+   */
+  .close__mail {
+    display: inline-block;
+    font-size: clamp(1.25rem, 0.8rem + 1.8vw, 2rem);
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 0.12em;
+    transition: color 0.2s ease;
+  }
+
+  .close__mail:hover {
+    color: var(--accent);
+  }
+
+  .close__links {
+    display: flex;
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+    margin-bottom: 0;
+    font-family: var(--face-meta);
+    font-size: var(--text-xs);
+  }
+
+  .close__links a {
+    color: var(--ink-muted);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+  }
+
+  .close__links a:hover {
+    color: var(--ink);
+    border-bottom-color: var(--line);
+  }
+</style>
