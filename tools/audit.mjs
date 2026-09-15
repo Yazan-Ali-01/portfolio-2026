@@ -261,5 +261,50 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
   await ctx.close();
 }
 
+// --- 8. Arrows without tabbing -----------------------------------------------
+// The shipped first version answered nothing until five invisible tab stops had
+// been cleared, and this suite passed the whole time because it only ever tested
+// the tabbed path. These check what a reader actually does.
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await blockAnalytics(ctx);
+  const page = await ctx.newPage();
+  await page.goto(BASE + '/work', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(2500);
+  console.log('\nArrows without tabbing');
+
+  const card = page.locator('.studio__label').first();
+  const scrollY = () => page.evaluate(() => window.scrollY);
+
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(300);
+  ok(await card.isVisible(), 'an arrow answers on a page nobody has tabbed into');
+
+  const first = (await card.innerText()).split('\n')[0];
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(220);
+  ok((await card.innerText()).split('\n')[0] !== first, 'arrows walk the room');
+
+  await page.keyboard.press('ArrowLeft');
+  await page.waitForTimeout(220);
+  ok((await card.innerText()).split('\n')[0] === first, 'and walk back');
+
+  // The vertical arrows belong to the page until the room is focused on purpose.
+  await page.keyboard.press('ArrowDown');
+  await page.waitForTimeout(300);
+  ok((await scrollY()) > 0, `the page still scrolls (${await scrollY()}px)`);
+
+  // A control the reader is operating keeps its own keys.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(300);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  await page.focus('a[href="/story"]');
+  await page.keyboard.press('ArrowRight');
+  await page.waitForTimeout(250);
+  ok(!(await card.isVisible()), 'arrows are left alone while a link has focus');
+  await ctx.close();
+}
+
 await browser.close();
 console.log(`\n${fail.length === 0 ? 'ALL CHECKS PASS' : fail.length + ' FAILURES'}`);

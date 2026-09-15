@@ -111,9 +111,13 @@ export default function Studio({ artifacts, notes }: Props) {
       const ro = new ResizeObserver(setSize);
       ro.observe(host);
 
-      const io = new IntersectionObserver(([e]) => studio.setActive(e.isIntersecting), {
-        threshold: 0,
-      });
+      const io = new IntersectionObserver(
+        ([e]) => {
+          inView = e.isIntersecting;
+          studio.setActive(e.isIntersecting);
+        },
+        { threshold: 0 },
+      );
       io.observe(host);
 
       const toNdc = (event: { clientX: number; clientY: number }) => {
@@ -157,35 +161,65 @@ export default function Studio({ artifacts, notes }: Props) {
       /*
        * The keyboard path into the room (E10-T4).
        *
-       * The index list under the canvas is still the accessible route and is
-       * never removed; the canvas itself is aria-hidden, so a screen reader
-       * never lands here. This is for the sighted keyboard user, who could see
-       * the room but had no way into it.
+       * The first version demanded five invisible tab stops before it answered
+       * anything, which meant the obvious move — land on the page and press an
+       * arrow — did nothing at all. So the room claims the horizontal arrows
+       * outright whenever it is on screen. Nothing else on this page uses them:
+       * there is no sideways scroll to take away.
+       *
+       * The vertical arrows are a different matter. Those scroll the page, and
+       * the room only takes them once it has been focused on purpose.
+       *
+       * The project index under the canvas is still the route that matters for
+       * assistive tech, and it is never removed.
        */
       const stops = studio.targets();
+      const keyHost = keysRef.current;
       let at = -1;
+      let inView = false;
 
       const step = (by: number) => {
         at = (at + by + stops.length) % stops.length;
+        setKeys(true);
         show(studio.focus(at));
       };
 
+      const leave = () => {
+        studio.blur();
+        show(null);
+        at = -1;
+        setKeys(false);
+      };
+
       const onKey = (event: KeyboardEvent) => {
+        if (!inView) return;
+
+        const el = document.activeElement;
+        const roomFocused = el === keyHost;
+        // Only when the reader is not operating something else: a link they
+        // tabbed to, or a field they are typing in.
+        const idle = roomFocused || el === null || el === document.body;
+
         switch (event.key) {
           case 'ArrowRight':
-          case 'ArrowDown':
-            event.preventDefault();
-            step(1);
-            break;
           case 'ArrowLeft':
-          case 'ArrowUp':
+            if (!idle) return;
             event.preventDefault();
-            step(-1);
+            step(event.key === 'ArrowRight' ? 1 : -1);
             break;
+
+          case 'ArrowDown':
+          case 'ArrowUp':
+            if (!roomFocused) return;
+            event.preventDefault();
+            step(event.key === 'ArrowDown' ? 1 : -1);
+            break;
+
           case 'Enter':
           case ' ': {
+            // Space scrolls. Claim it only when there is something to open.
+            if (!idle || at < 0) return;
             event.preventDefault();
-            if (at < 0) return step(1);
             const stop = stops[at];
             if (stop.kind === 'project' && stop.project) {
               track('artifact_open', { project: stop.project });
@@ -193,11 +227,13 @@ export default function Studio({ artifacts, notes }: Props) {
             }
             break;
           }
+
           case 'Escape':
-            studio.blur();
-            show(null);
-            at = -1;
+            if (at < 0) return;
+            leave();
+            keyHost?.blur();
             break;
+
           default:
             return;
         }
@@ -209,15 +245,11 @@ export default function Studio({ artifacts, notes }: Props) {
         if (at < 0) step(1);
       };
 
-      const onBlur = () => {
-        setKeys(false);
-        studio.blur();
-        show(null);
-        at = -1;
-      };
+      const onBlur = () => leave();
 
-      const keyHost = keysRef.current;
-      keyHost?.addEventListener('keydown', onKey);
+      // On window, not on the element: the arrows have to answer before
+      // anything has been focused, which is the whole point.
+      window.addEventListener('keydown', onKey);
       keyHost?.addEventListener('focus', onFocus);
       keyHost?.addEventListener('blur', onBlur);
 
@@ -226,7 +258,7 @@ export default function Studio({ artifacts, notes }: Props) {
       host.addEventListener('click', onClick);
 
       cleanup = () => {
-        keyHost?.removeEventListener('keydown', onKey);
+        window.removeEventListener('keydown', onKey);
         keyHost?.removeEventListener('focus', onFocus);
         keyHost?.removeEventListener('blur', onBlur);
         host.removeEventListener('pointermove', onMove);
@@ -250,15 +282,16 @@ export default function Studio({ artifacts, notes }: Props) {
 
       {/*
         Focusable, but transparent to the pointer, so a mouse never touches it
-        and the room reads exactly as before. Hidden from assistive tech: the
-        project index below the canvas is that route, and duplicating it here
-        would announce the same three links twice.
+        and the room reads exactly as before. It carries a real label rather
+        than aria-hidden: a focusable node that is hidden from assistive tech
+        drops a screen reader somewhere that announces nothing.
       */}
       <div
         ref={keysRef}
         class="studio__keys"
         tabIndex={ready ? 0 : -1}
-        aria-hidden="true"
+        role="group"
+        aria-label="The desk in 3D. Arrow keys move between the things on it, Enter opens a project. Every project is also in the list below."
         hidden={!ready}
       />
 
