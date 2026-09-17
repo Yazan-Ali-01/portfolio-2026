@@ -7,7 +7,7 @@ interface Props {
   title?: string;
   description?: string;
   /** Which palette and typography this page belongs to. */
-  world?: 'gate' | 'story' | 'work';
+  world?: 'gate' | 'story' | 'work' | 'hi';
   /** Share card for this page, if it has one of its own. Site-wide card otherwise. */
   image?: string;
   /** Alt text for that card. */
@@ -86,6 +86,7 @@ const personSchema = {
       italics are used once, in chapter 3, and must not block first paint.
     */}
     {/* Preload only the display face this world actually paints above the fold. */}
+    {world === 'hi' && <Font cssVariable="--font-mono" preload={[{ weight: 400 }, { weight: 600 }]} />}
     {world === 'story' && <Font cssVariable="--font-display" preload />}
     {world !== 'story' && <Font cssVariable="--font-grotesque" preload={[{ weight: 600 }]} />}
     <Font cssVariable="--font-meta" preload={[{ weight: 400, style: 'normal' }]} />
@@ -103,7 +104,8 @@ const personSchema = {
     {world !== 'story' && <Font cssVariable="--font-display" />}
   </head>
   <body>
-    <a class="u-skip" href="#story">Skip to the story</a>
+    {/* /hi has five links and no landmarks; there is nothing to skip past. */}
+    {world !== 'hi' && <a class="u-skip" href="#story">Skip to the story</a>}
     <slot />
 
     <script>

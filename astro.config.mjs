@@ -19,8 +19,9 @@ export default defineConfig({
   integrations: [
     preact(),
     sitemap({
-      // /og and /og/* exist only to be screenshotted into share cards.
-      filter: (page) => !page.includes('/og'),
+      // /og/* exists only to be screenshotted, and /hi is a QR destination
+      // rather than a page anyone should reach through search.
+      filter: (page) => !page.includes('/og') && !page.endsWith('/hi/'),
     }),
   ],
   vite: {
@@ -55,6 +56,15 @@ export default defineConfig({
       provider: fontProviders.fontsource(),
       name: 'Bricolage Grotesque',
       cssVariable: '--font-grotesque',
+      weights: [400, 600],
+      styles: ['normal'],
+      subsets: ['latin'],
+    },
+    {
+      // The shirt page, and only that page. Mono for every role it plays.
+      provider: fontProviders.fontsource(),
+      name: 'IBM Plex Mono',
+      cssVariable: '--font-mono',
       weights: [400, 600],
       styles: ['normal'],
       subsets: ['latin'],

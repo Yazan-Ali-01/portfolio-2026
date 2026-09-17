@@ -5,6 +5,7 @@
 
      [data-world="story"]  Oxblood  — deep plum, ivory, rose. Cinematic.
      [data-world="work"]   Signal   — neutral black, violet, mono. Engineered.
+     [data-world="hi"]     Shirt    — the palette printed on the t-shirt.
 
    Component CSS only ever names the tokens, never the values, so the same
    component reads correctly in either world.
@@ -98,4 +99,31 @@
 
   --display-weight: 600;
   --display-tracking: -0.035em;
+}
+
+/* --- Shirt: the QR destination (/hi) -------------------------------------
+   These four values are the ones on the garment, so a stranger who scans the
+   code sees the thing they are holding. Only --line is derived: a border needs
+   a value and the shirt does not have one, so it is the ground lifted rather
+   than a fifth colour invented.
+   ------------------------------------------------------------------------- */
+[data-world='hi'] {
+  --ground: #0e1116;
+  --ground-raise: #151a21;
+  --ground-wash: none;
+  --ink: #c3ccd8;
+  --ink-muted: #97a3b2;
+  --ink-faint: #97a3b2;
+  --line: #222932;
+  --accent: #ffae3d;
+  --accent-dim: rgba(255, 174, 61, 0.16);
+
+  /* Mono throughout, so every face resolves to the same family. */
+  --face-display: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --face-text: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --face-meta: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --face-data: var(--font-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --display-weight: 600;
+  --display-tracking: -0.02em;
 }

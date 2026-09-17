@@ -306,5 +306,65 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
   await ctx.close();
 }
 
+// --- 9. The shirt page (/hi) -------------------------------------------------
+// A stranger, on a phone, one-handed, fifteen seconds. Everything has to be in
+// reach without scrolling, and the contact card has to be complete.
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  await blockAnalytics(ctx);
+  const page = await ctx.newPage();
+  await page.goto(BASE + '/hi', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(600);
+  console.log('\nThe shirt page');
+
+  const box = await page.evaluate(() => ({
+    scrolls: document.documentElement.scrollHeight > window.innerHeight + 1,
+    x: document.documentElement.scrollWidth - window.innerWidth,
+    ground: getComputedStyle(document.body).backgroundColor,
+    face: getComputedStyle(document.querySelector('.hi__name')).fontFamily,
+  }));
+  ok(!box.scrolls, 'nothing is below the fold at 390x844');
+  ok(box.x === 0, `no sideways overflow (${box.x}px)`);
+  ok(box.ground === 'rgb(14, 17, 22)', `the shirt's ground colour (${box.ground})`);
+  ok(/plex mono/i.test(box.face), 'IBM Plex Mono is the face');
+
+  // Every action, primary and secondary, has to clear a fingertip.
+  const actions = await page.evaluate(() =>
+    [...document.querySelectorAll('.hi__save, .hi__wa, .hi__more a')].map((a) => ({
+      label: a.textContent.trim().split('\n')[0],
+      h: Math.round(a.getBoundingClientRect().height),
+      bottom: Math.round(a.getBoundingClientRect().bottom),
+      href: a.getAttribute('href'),
+    })),
+  );
+  ok(actions.length === 5, `five actions and nothing else (${actions.length})`);
+  ok(actions[1].label.includes('WhatsApp'), `WhatsApp is its own button, second (${actions[1].label})`);
+  ok(actions.every((a) => a.h >= 44), `every target clears 44px (smallest ${Math.min(...actions.map((a) => a.h))}px)`);
+  ok(actions.every((a) => a.bottom <= 844), 'every target is inside the viewport');
+
+  ok(actions[0].href === '/hi.vcf', `the card is the first action (${actions[0].href})`);
+  const order = actions.slice(2).map((a) => a.label).join(', ');
+  ok(order === 'My work, My story, LinkedIn', `the places to read, in order (${order})`);
+
+  const wa = actions.find((a) => a.href.includes('wa.me')).href;
+  ok(/^https:\/\/wa\.me\/971528556635\?text=/.test(wa), `wa.me deep link, digits only (${wa.split('?')[0]})`);
+  ok(decodeURIComponent(wa).includes('Hi Yazan, I scanned your shirt.'), 'and the message is prefilled');
+
+  // The card itself: every field the brief named has to be in it.
+  const vcf = await page.goto(BASE + '/hi.vcf');
+  const text = await vcf.text();
+  ok(vcf.status() === 200, `/hi.vcf is served (${vcf.status()})`);
+  for (const field of ['FN:Yazan Ali', 'TEL', 'EMAIL', 'URL:https://www.yazan-ali.net', 'linkedin.com/in/']) {
+    ok(text.includes(field), `the card carries ${field.split(':')[0]}`);
+  }
+  ok(!/\n[A-Z-]+:\s*$/m.test(text), 'the card has no empty fields');
+  ok(text.includes('\r\n'), 'CRLF line endings, as vCard asks');
+
+  // A QR destination has no business in search results.
+  const map = await page.goto(BASE + '/sitemap-0.xml');
+  ok(!(await map.text()).includes('/hi'), 'and it stays out of the sitemap');
+  await ctx.close();
+}
+
 await browser.close();
 console.log(`\n${fail.length === 0 ? 'ALL CHECKS PASS' : fail.length + ' FAILURES'}`);

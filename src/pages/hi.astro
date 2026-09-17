@@ -1,0 +1,204 @@
+---
+import Story from '../layouts/Story.astro';
+import { contact, copy, whatsappHref } from '../content/hi';
+import { meta } from '../content/meta';
+
+/**
+ * The shirt page. A stranger, on a phone, one-handed, fifteen seconds.
+ *
+ * Read in the order it is used: where they came from, who this is, then the one
+ * thing worth doing, then four places to go. Nothing else on the page, and
+ * nothing below the fold at 390x844.
+ *
+ * Three tiers, because messaging is worth its own button rather than a cell in
+ * a grid: the contact card, then WhatsApp, then the three places to read. The
+ * three sit in one row so the whole set stays inside a thumb's arc.
+ */
+const STORY_URL = '/story';
+---
+
+<Story
+  world="hi"
+  title={`${meta.name} — ${contact.title}`}
+  description="You scanned the shirt. Save my contact, or come see the work."
+>
+  <main class="hi">
+    <p class="hi__from">You scanned the shirt.</p>
+
+    <div class="hi__id">
+      <h1 class="hi__name">{meta.name}</h1>
+      <p class="hi__what">
+        Software engineer in Dubai. I build web products end to end, from the
+        interface down to the infrastructure.
+      </p>
+      <p class="hi__status">{copy.status}</p>
+    </div>
+
+    <!--
+      No `download` attribute. Left alone, a phone hands a text/vcard response
+      to the contacts app; `download` sends it to the file system instead, which
+      is one more step between a stranger and the only thing this page is for.
+    -->
+    <a class="hi__save" href="/hi.vcf" data-ev="hi_action" data-ev-channel="vcard">
+      <span class="hi__savename">{copy.primary}</span>
+      <span class="hi__savenote">{copy.primaryNote}</span>
+    </a>
+
+    <a class="hi__wa" href={whatsappHref} data-ev="hi_action" data-ev-channel="whatsapp">
+      {copy.whatsapp}
+    </a>
+
+    <nav class="hi__more">
+      <a href="/work" data-ev="hi_action" data-ev-channel="work">My work</a>
+      <a href={STORY_URL} data-ev="hi_action" data-ev-channel="story">My story</a>
+      <a href={contact.linkedin} rel="me" data-ev="hi_action" data-ev-channel="linkedin">
+        LinkedIn
+      </a>
+    </nav>
+  </main>
+</Story>
+
+<style>
+  /*
+   * 100svh, not vh: on a phone the browser's own chrome is part of the viewport
+   * in vh terms, and the actions would sit under it.
+   */
+  .hi {
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    max-width: 30rem;
+    margin-inline: auto;
+    padding: clamp(1.5rem, 6vw, 2.5rem);
+  }
+
+  .hi__from {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--accent);
+  }
+
+  /*
+   * Takes the slack on both sides. The actions stay at the bottom where the
+   * thumb is, and the name sits in the middle of what is left rather than
+   * leaving one tall empty band between the two.
+   */
+  .hi__id {
+    margin-block: auto;
+  }
+
+  .hi__name {
+    font-size: clamp(2rem, 9vw, 2.75rem);
+    margin-bottom: var(--space-xs);
+  }
+
+  .hi__what {
+    margin-bottom: var(--space-sm);
+    font-size: var(--text-sm);
+    color: var(--ink);
+  }
+
+  /* The dot is the only ornament on the page, and it marks the one live fact. */
+  .hi__status {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6em;
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--ink-muted);
+  }
+
+  .hi__status::before {
+    content: '';
+    flex: none;
+    width: 0.5em;
+    height: 0.5em;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+
+  /*
+   * The primary action. Filled, full width, and the only thing on the page that
+   * inverts the palette, which is what makes it unmistakable at arm's length.
+   */
+  .hi__save {
+    display: block;
+    min-height: 44px;
+    padding: var(--space-sm);
+    background: var(--accent);
+    color: #0e1116;
+    text-decoration: none;
+    border: 1px solid var(--accent);
+  }
+
+  .hi__savename {
+    display: block;
+    font-size: var(--text-lg);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .hi__savenote {
+    display: block;
+    margin-top: 0.25em;
+    font-size: var(--text-xs);
+    /* The accent is light, so this is the ground colour softened, not grey. */
+    color: rgba(14, 17, 22, 0.72);
+  }
+
+  /*
+   * WhatsApp's own green, which is the one colour on this page that does not
+   * come from the shirt. It earns the exception: a stranger recognises the
+   * green before they read the label. Outlined rather than filled, so the
+   * contact card keeps the most weight.
+   */
+  .hi__wa {
+    --wa: #25d366;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 56px;
+    border: 1px solid var(--wa);
+    color: var(--wa);
+    font-size: var(--text-base);
+    text-decoration: none;
+  }
+
+  .hi__more {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2xs);
+  }
+
+  .hi__more a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 56px;
+    border: 1px solid var(--line);
+    background: var(--ground-raise);
+    color: var(--ink);
+    /* Three across on a 390px screen: the smaller size keeps every label on
+       one line without shrinking the target. */
+    font-size: var(--text-xs);
+    text-decoration: none;
+  }
+
+  /* Phones do not hover. This is for the desktop visit and for keyboards. */
+  @media (hover: hover) {
+    .hi__save:hover {
+      filter: brightness(1.08);
+    }
+
+    .hi__wa:hover {
+      background: rgba(37, 211, 102, 0.14);
+    }
+
+    .hi__more a:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+  }
+</style>
