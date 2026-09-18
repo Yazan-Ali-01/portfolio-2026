@@ -22,6 +22,9 @@ export default function Studio({ artifacts, notes }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const labelRef = useRef<HTMLDivElement>(null);
   const keysRef = useRef<HTMLDivElement>(null);
+  /** Set by the effect once the scene exists, so the caption buttons can drive it. */
+  const goRef = useRef<((by: number) => void) | null>(null);
+  const stepShot = (by: number) => goRef.current?.(by);
   const [hover, setHover] = useState<Hover>(null);
   const [ready, setReady] = useState(false);
   const [keys, setKeys] = useState(false);
@@ -114,11 +117,13 @@ export default function Studio({ artifacts, notes }: Props) {
       if (compact) setRoom({ shots, at: 0 });
 
       const goTo = (i: number) => {
-        shotAt = Math.max(0, Math.min(shots.length - 1, i));
+        const n = shots.length;
+        shotAt = n ? ((i % n) + n) % n : 0;
         studio.goTo(shotAt);
         setRoom({ shots, at: shotAt });
         trackOnce('studio:used', 'studio_used');
       };
+      goRef.current = (by: number) => goTo(shotAt + by);
 
       const setSize = () => {
         const w = host.clientWidth;
@@ -191,6 +196,12 @@ export default function Studio({ artifacts, notes }: Props) {
           swiped = false;
           return;
         }
+        /*
+         * The caption sits inside the stage, so its clicks bubble here. Without
+         * this, tapping "next" also counted as a tap on the room and the pick
+         * fell through to whatever monitor was nearest, navigating away.
+         */
+        if ((event.target as HTMLElement | null)?.closest('.studio__shot')) return;
         // Resolve where the click actually landed. Relying on hover state meant
         // taps never opened anything, because touch never hovers.
         const [nx, ny] = toNdc(event);
@@ -363,11 +374,42 @@ export default function Studio({ artifacts, notes }: Props) {
       */}
       {room && (
         <div class="studio__shot">
-          <div class="studio__dots" aria-hidden="true">
-            {room.shots.map((s, i) => (
-              <span class={i === room.at ? 'is-on' : ''} />
-            ))}
+          {/*
+            Buttons, not just a swipe. The gesture was there before this and
+            nobody could tell: a swipe leaves no mark on the page. These say
+            there are three of them and that you can move, and they give a tap
+            target to anyone who would never think to swipe.
+          */}
+          <div class="studio__rail">
+            <button
+              type="button"
+              class="studio__step"
+              aria-label="Previous project"
+              onClick={() => stepShot(-1)}
+            >
+              <span aria-hidden="true">‹</span>
+            </button>
+
+            <div class="studio__dots" aria-hidden="true">
+              {room.shots.map((s, i) => (
+                <span class={i === room.at ? 'is-on' : ''} />
+              ))}
+            </div>
+
+            <p class="studio__count">
+              {room.at + 1} of {room.shots.length}
+            </p>
+
+            <button
+              type="button"
+              class="studio__step"
+              aria-label="Next project"
+              onClick={() => stepShot(1)}
+            >
+              <span aria-hidden="true">›</span>
+            </button>
           </div>
+
           <p class="studio__shotname">{room.shots[room.at]?.name}</p>
           {room.shots[room.at]?.status && (
             <p class="studio__shotmeta">{room.shots[room.at].status}</p>

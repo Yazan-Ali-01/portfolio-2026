@@ -387,6 +387,31 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
 
   ok(await page.locator('.studio__shot').isVisible(), 'a caption names what is in shot');
   ok((await page.locator('.studio__dots span').count()) === 3, 'three shots, three dots');
+
+  /*
+   * The swipe was invisible: a gesture leaves no mark on the page, so nobody
+   * knew it was there. These controls are the affordance, and they are also
+   * the way in for anyone who would never think to swipe.
+   */
+  const steps = page.locator('.studio__step');
+  ok((await steps.count()) === 2, 'there are visible previous and next controls');
+  const sb = await steps.first().boundingBox();
+  ok(sb.width >= 44 && sb.height >= 44, `they clear 44px (${Math.round(sb.width)}x${Math.round(sb.height)})`);
+  ok((await page.locator('.studio__count').innerText()).trim() === '1 of 3', 'and a count says how many there are');
+
+  await steps.last().click();
+  await page.waitForTimeout(800);
+  ok((await name()) === 'Jeem', `the next control moves a shot (${await name()})`);
+  ok(!page.url().includes('/work/'), 'and does not fall through to the room underneath');
+  await steps.first().click();
+  await page.waitForTimeout(800);
+  ok((await name()) === 'Driven Properties', 'the previous control moves back');
+
+  // The posters are desktop dressing; on a phone they only crowd the shot.
+  const posters = await page.evaluate(() =>
+    performance.getEntriesByType('resource').filter((r) => /umm-kulthum|death-note/.test(r.name)).length,
+  );
+  ok(posters === 0, `the wall posters are not fetched on a phone (${posters})`);
   ok((await name()) === 'Driven Properties', `opens on the first artifact (${await name()})`);
 
   // The screenshot has to be readable, which is the whole reason for this mode.
@@ -412,11 +437,14 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
   ok((await href()) === '/work/jeem', `and the link follows (${await href()})`);
 
   await swipe(-140);
+  ok((await name()) === 'Complytude', `and again (${await name()})`);
+
+  // Wraps rather than clamping: a swipe that does nothing reads as broken.
   await swipe(-140);
-  ok((await name()) === 'Complytude', `it stops at the last one (${await name()})`);
+  ok((await name()) === 'Driven Properties', `past the end it wraps (${await name()})`);
 
   await swipe(140);
-  ok((await name()) === 'Jeem', 'and swipes back');
+  ok((await name()) === 'Complytude', 'and wraps backwards too');
 
   // Vertical gestures still belong to the page.
   const before = await name();

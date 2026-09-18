@@ -288,15 +288,52 @@ body {
   pointer-events: none;
 }
 
+/* The row that says "there are three of these and you can move between them". */
+.studio__rail {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-2xs);
+  pointer-events: auto;
+}
+
+.studio__step {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: rgba(11, 11, 12, 0.66);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--ink);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.studio__step:active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.studio__count {
+  margin: 0 0 0 auto;
+  font-family: var(--face-data, var(--face-meta));
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+
 .studio__dots {
   display: flex;
   gap: 0.4rem;
-  margin-bottom: var(--space-xs);
 }
 
 .studio__dots span {
-  width: 1.4rem;
-  height: 2px;
+  width: 1.1rem;
+  height: 3px;
   /* --line disappears against the room; these have to read over the render. */
   background: rgba(244, 244, 242, 0.32);
 }

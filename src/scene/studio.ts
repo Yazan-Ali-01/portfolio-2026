@@ -496,8 +496,16 @@ export function createStudio(
     note(id, y + h / 2 + 0.14, face, board);
   }
 
-  wallPoster('umm-kulthum', '/work/tex/umm-kulthum.jpg', -3.32, 2.52, 1.15, 583 / 512);
-  wallPoster('death-note', '/work/tex/death-note.jpg', -1.58, 2.5, 1.02, 746 / 576);
+  /*
+   * Not on phones. The showroom frames one artifact at a time, so the wall
+   * behind it is backdrop rather than something anyone can look at, and the two
+   * posters only crowd the shot. Skipping the call also skips their textures,
+   * which is 126KB a phone no longer fetches.
+   */
+  if (!opts.compact) {
+    wallPoster('umm-kulthum', '/work/tex/umm-kulthum.jpg', -3.32, 2.52, 1.15, 583 / 512);
+    wallPoster('death-note', '/work/tex/death-note.jpg', -1.58, 2.5, 1.02, 746 / 576);
+  }
 
   // --- keyboard: a 75% board, laid out for real rather than faked ----------
   const KB_U = 0.098; // world units per key unit
@@ -915,7 +923,18 @@ export function createStudio(
     const forWidth = (halfW * 1.16) / (Math.tan(halfFov) * camera.aspect);
     const forHeight = (halfH * 1.4) / Math.tan(halfFov);
 
-    outPos.set(outLook.x, outLook.y, outLook.z + Math.max(forWidth, forHeight));
+    const d = Math.max(forWidth, forHeight);
+
+    /*
+     * The caption owns the bottom of the stage, so the artifact is lifted clear
+     * of it. Camera and target move down together rather than the camera
+     * tilting: a tilt would keystone the screenshot, and these are screenshots
+     * of real interfaces, which should read square.
+     */
+    const lift = 2 * d * Math.tan(halfFov) * 0.17;
+
+    outPos.set(outLook.x, outLook.y - lift, outLook.z + d);
+    outLook.y -= lift;
   }
 
   const showroom = opts.compact;
@@ -1037,7 +1056,10 @@ export function createStudio(
       });
     },
     goTo(i) {
-      shotIndex = Math.max(0, Math.min(shotMeshes.length - 1, i));
+      // Wraps. With three shots a clamped end reads as a broken swipe, and the
+      // dots already say where you are.
+      const n = shotMeshes.length;
+      shotIndex = n ? ((i % n) + n) % n : 0;
       start();
     },
     targets() {
