@@ -366,5 +366,96 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
   await ctx.close();
 }
 
+// --- 10. The portrait showroom -----------------------------------------------
+// On a phone the room is a landscape composition in a portrait window. These
+// check that one artifact is framed at a time and that a swipe moves along the
+// desk without stealing the page's own scroll.
+{
+  const ctx = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+  });
+  await blockAnalytics(ctx);
+  const page = await ctx.newPage();
+  await page.goto(BASE + '/work', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(3500);
+  console.log('\nThe portrait showroom');
+
+  const name = () => page.locator('.studio__shotname').innerText().then((t) => t.trim());
+  const href = () => page.locator('.studio__shotcta').getAttribute('href');
+
+  ok(await page.locator('.studio__shot').isVisible(), 'a caption names what is in shot');
+  ok((await page.locator('.studio__dots span').count()) === 3, 'three shots, three dots');
+  ok((await name()) === 'Driven Properties', `opens on the first artifact (${await name()})`);
+
+  // The screenshot has to be readable, which is the whole reason for this mode.
+  const wide = await page.evaluate(() => {
+    const c = document.querySelector('canvas');
+    return Math.round(c.getBoundingClientRect().width);
+  });
+  ok(wide >= 360, `the stage uses the full width (${wide}px)`);
+
+  const swipe = async (dx) => {
+    const b = await page.locator('.studio').boundingBox();
+    const y = b.y + b.height * 0.42;
+    const x = b.x + b.width / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    for (let i = 1; i <= 6; i++) await page.mouse.move(x + (dx * i) / 6, y);
+    await page.mouse.up();
+    await page.waitForTimeout(800);
+  };
+
+  await swipe(-140);
+  ok((await name()) === 'Jeem', `a swipe moves along the desk (${await name()})`);
+  ok((await href()) === '/work/jeem', `and the link follows (${await href()})`);
+
+  await swipe(-140);
+  await swipe(-140);
+  ok((await name()) === 'Complytude', `it stops at the last one (${await name()})`);
+
+  await swipe(140);
+  ok((await name()) === 'Jeem', 'and swipes back');
+
+  // Vertical gestures still belong to the page.
+  const before = await name();
+  const b = await page.locator('.studio').boundingBox();
+  await page.mouse.move(b.x + 195, b.y + 200);
+  await page.mouse.down();
+  await page.mouse.move(b.x + 195, b.y + 60);
+  await page.mouse.up();
+  await page.waitForTimeout(400);
+  ok((await name()) === before, 'a vertical drag scrolls rather than changing shot');
+
+  // The heading and the section links must not stack on top of each other.
+  const layout = await page.evaluate(() => {
+    const nav = document.querySelector('.studio__nav').getBoundingClientRect();
+    const head = document.querySelector('.work__head').getBoundingClientRect();
+    return { clear: head.top >= nav.bottom - 1, caption: !!document.querySelector('.studio__shot') };
+  });
+  ok(layout.clear, 'the heading sits clear of the section links');
+  await ctx.close();
+}
+
+// --- 11. The room on a wide screen is untouched ------------------------------
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 860 } });
+  await blockAnalytics(ctx);
+  const page = await ctx.newPage();
+  await page.goto(BASE + '/work', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(2500);
+  console.log('\nThe room on a wide screen');
+  const m = await page.evaluate(() => ({
+    caption: !!document.querySelector('.studio__shot'),
+    stage: Math.round(document.querySelector('.studio').getBoundingClientRect().height),
+    head: getComputedStyle(document.querySelector('.studio__head')).position,
+  }));
+  ok(!m.caption, 'no showroom caption: the whole room fits');
+  ok(m.stage > 700, `the stage still fills the screen (${m.stage}px)`);
+  ok(m.head === 'absolute', 'the heading still sits over the room');
+  await ctx.close();
+}
+
 await browser.close();
 console.log(`\n${fail.length === 0 ? 'ALL CHECKS PASS' : fail.length + ' FAILURES'}`);

@@ -57,7 +57,12 @@ export type ArtifactSpec = {
   width: number;
   /** height / width of the texture, so nothing is stretched. */
   aspect: number;
+  /** Shown under the artifact in the portrait showroom. */
+  status?: string;
 };
+
+/** One framed artifact in the portrait showroom. */
+export type Shot = { id: string; name: string; status?: string };
 
 /** A thing on the desk that says something about itself when you point at it. */
 export type DeskNoteSpec = { id: string; title: string; body: string };
@@ -87,6 +92,16 @@ export type StudioController = {
    * desk notes. Each list is left to right across the room.
    */
   targets: () => { kind: 'project' | 'note'; name: string; project?: string }[];
+  /**
+   * The portrait showroom. On a phone the room is a landscape composition in a
+   * portrait window: everything shrinks until the screenshots, which are the
+   * actual content, are too small to read. So on compact viewports the camera
+   * frames one artifact at a time, filling the width, and the reader swipes
+   * along the desk. Empty on wide viewports, where the whole room fits.
+   */
+  shots: () => Shot[];
+  /** Frame shot `i`. The camera eases there rather than cutting. */
+  goTo: (i: number) => void;
   /**
    * Light up target `i` as though the pointer were on it, and hand back the
    * card to show. Survives until the pointer moves or `blur()` is called.
@@ -701,6 +716,8 @@ export function createStudio(
     screen.userData.id = spec.id;
     screen.userData.name = spec.name;
     screen.userData.halfHeight = h / 2;
+    screen.userData.halfWidth = w / 2;
+    screen.userData.spec = spec;
     screen.userData.shellMat = shellMat;
     screen.userData.group = group;
 
@@ -738,8 +755,22 @@ export function createStudio(
     look.x += (lookTarget.x - look.x) * ease;
     look.y += (lookTarget.y - look.y) * ease;
 
-    camera.position.set(HOME.x + look.x * 1.5, HOME.y + look.y * 0.7, HOME.z);
-    camera.lookAt(look.x * 0.5, opts.compact ? -0.28 : -0.05, -2);
+    if (showroom) {
+      frameShot(shotIndex, wantPos, wantLook);
+      if (!shotReady) {
+        // First frame of the first shot: arrive, do not fly in from the origin.
+        atPos.copy(wantPos);
+        atLook.copy(wantLook);
+        shotReady = true;
+      }
+      atPos.lerp(wantPos, ease);
+      atLook.lerp(wantLook, ease);
+      camera.position.copy(atPos);
+      camera.lookAt(atLook);
+    } else {
+      camera.position.set(HOME.x + look.x * 1.5, HOME.y + look.y * 0.7, HOME.z);
+      camera.lookAt(look.x * 0.5, -0.05, -2);
+    }
 
     raycaster.setFromCamera(pointer, camera);
     const front = raycaster.intersectObjects([...pickable, ...noteMeshes], false)[0]
@@ -858,6 +889,43 @@ export function createStudio(
 
   const keyOrder = [...[...pickable].sort(byX), ...oncePerNote];
 
+  /*
+   * Showroom shots, left to right along the desk, so a swipe moves the camera
+   * the same way the finger goes. Only the projects: the desk objects are set
+   * dressing, and they stay reachable by tap in whatever shot they appear in.
+   */
+  const shotMeshes = [...pickable].sort(byX);
+
+  /**
+   * Where the camera has to stand for artifact `i` to fill the frame. Distance
+   * comes off the live aspect ratio, so this is recomputed on every resize
+   * rather than baked in: a phone rotated to landscape needs a different one.
+   */
+  function frameShot(i: number, outPos: Vector3, outLook: Vector3) {
+    const mesh = shotMeshes[i];
+    if (!mesh) return;
+    mesh.getWorldPosition(outLook);
+
+    const halfFov = (camera.fov * Math.PI) / 360;
+    const halfW = mesh.userData.halfWidth as number;
+    const halfH = mesh.userData.halfHeight as number;
+
+    // 1.16 leaves a margin at the sides; 1.4 keeps the desk and the wall in
+    // shot above and below, so it still reads as a room rather than a slide.
+    const forWidth = (halfW * 1.16) / (Math.tan(halfFov) * camera.aspect);
+    const forHeight = (halfH * 1.4) / Math.tan(halfFov);
+
+    outPos.set(outLook.x, outLook.y, outLook.z + Math.max(forWidth, forHeight));
+  }
+
+  const showroom = opts.compact;
+  let shotIndex = 0;
+  const wantPos = new Vector3();
+  const wantLook = new Vector3();
+  const atPos = new Vector3();
+  const atLook = new Vector3();
+  let shotReady = false;
+
   function start() {
     if (!active) return;
     // Still mode draws exactly one frame, here, and then nothing until asked
@@ -961,6 +1029,16 @@ export function createStudio(
         x: (probe.x * 0.5 + 0.5) * size.w,
         y: (-probe.y * 0.5 + 0.5) * size.h,
       };
+    },
+    shots() {
+      return shotMeshes.map((mesh) => {
+        const spec = mesh.userData.spec as ArtifactSpec;
+        return { id: spec.id, name: spec.name, status: spec.status };
+      });
+    },
+    goTo(i) {
+      shotIndex = Math.max(0, Math.min(shotMeshes.length - 1, i));
+      start();
     },
     targets() {
       return keyOrder.map((mesh) =>

@@ -275,6 +275,65 @@ body {
   height: 100%;
 }
 
+/* --- portrait showroom caption ------------------------------------------- */
+
+.studio__shot {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 4;
+  padding: var(--space-md) var(--gutter) var(--space-sm);
+  /* Reads over the desk without hiding it. */
+  background: linear-gradient(0deg, var(--ground) 26%, rgba(11, 11, 12, 0.72) 68%, transparent);
+  pointer-events: none;
+}
+
+.studio__dots {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: var(--space-xs);
+}
+
+.studio__dots span {
+  width: 1.4rem;
+  height: 2px;
+  /* --line disappears against the room; these have to read over the render. */
+  background: rgba(244, 244, 242, 0.32);
+}
+
+.studio__dots .is-on {
+  background: var(--accent);
+}
+
+.studio__shotname {
+  margin: 0;
+  font-family: var(--face-display);
+  font-size: var(--text-lg);
+  font-weight: var(--display-weight);
+  letter-spacing: var(--display-tracking);
+}
+
+.studio__shotmeta {
+  margin: 0.15rem 0 var(--space-xs);
+  font-family: var(--face-meta);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+
+/* The one thing in here a finger is meant to hit. */
+.studio__shotcta {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-right: var(--space-sm);
+  font-family: var(--face-data, var(--face-meta));
+  font-size: var(--text-xs);
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px solid var(--accent);
+  pointer-events: auto;
+}
+
 /*
  * The keyboard's way in. It covers the room so the focus ring frames what it
  * controls, and it is transparent to the pointer so a mouse never meets it.
@@ -326,6 +385,15 @@ body {
     top: 3.6rem;
     bottom: auto;
   }
+}
+
+/*
+ * `display: flex` above outranks the browser's own `[hidden] { display: none }`,
+ * so without this the legend was painted on every visit, keyboard or not. On a
+ * phone that meant arrow-key instructions sitting at the top of the screen.
+ */
+.studio__legend[hidden] {
+  display: none;
 }
 
 .studio__legend kbd {

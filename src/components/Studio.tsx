@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
-import type { ArtifactSpec, DeskNoteSpec, HoverAnchor } from '../scene/studio';
+import type { ArtifactSpec, DeskNoteSpec, HoverAnchor, Shot } from '../scene/studio';
 import { track, trackOnce } from '../lib/analytics';
 
 /**
@@ -25,6 +25,8 @@ export default function Studio({ artifacts, notes }: Props) {
   const [hover, setHover] = useState<Hover>(null);
   const [ready, setReady] = useState(false);
   const [keys, setKeys] = useState(false);
+  /** Portrait showroom: the shot list and which one is framed. Null on wide viewports. */
+  const [room, setRoom] = useState<{ shots: Shot[]; at: number } | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -101,6 +103,23 @@ export default function Studio({ artifacts, notes }: Props) {
       const studio = createStudio(canvas, artifacts, { compact, notes, onHover, still });
       setReady(true);
 
+      /*
+       * The portrait showroom. A landscape room in a portrait window shrinks
+       * until the screenshots, which are the point, are unreadable. On compact
+       * viewports the camera frames one at a time and the reader swipes along
+       * the desk.
+       */
+      const shots = compact ? studio.shots() : [];
+      let shotAt = 0;
+      if (compact) setRoom({ shots, at: 0 });
+
+      const goTo = (i: number) => {
+        shotAt = Math.max(0, Math.min(shots.length - 1, i));
+        studio.goTo(shotAt);
+        setRoom({ shots, at: shotAt });
+        trackOnce('studio:used', 'studio_used');
+      };
+
       const setSize = () => {
         const w = host.clientWidth;
         const h = host.clientHeight;
@@ -134,12 +153,44 @@ export default function Studio({ artifacts, notes }: Props) {
         studio.setDrag(nx, ny);
       };
 
+      /*
+       * Swipe, on compact only. Horizontal past the threshold moves a shot;
+       * anything more vertical is left alone so the page still scrolls, which
+       * is also why the stage sets `touch-action: pan-y`.
+       */
+      let downX = 0;
+      let downY = 0;
+      let tracking = false;
+      let swiped = false;
+
+      const onDown = (event: PointerEvent) => {
+        downX = event.clientX;
+        downY = event.clientY;
+        tracking = true;
+        swiped = false;
+      };
+
+      const onUp = (event: PointerEvent) => {
+        if (!tracking) return;
+        tracking = false;
+        const dx = event.clientX - downX;
+        const dy = event.clientY - downY;
+        if (Math.abs(dx) < 40 || Math.abs(dx) <= Math.abs(dy)) return;
+        swiped = true;
+        // Swipe left, camera moves right along the desk, like dragging the room.
+        goTo(shotAt + (dx < 0 ? 1 : -1));
+      };
+
       const onLeave = () => {
         studio.setPointer(-2, -2);
         studio.setDrag(0, 0);
       };
 
       const onClick = (event: MouseEvent) => {
+        if (swiped) {
+          swiped = false;
+          return;
+        }
         // Resolve where the click actually landed. Relying on hover state meant
         // taps never opened anything, because touch never hovers.
         const [nx, ny] = toNdc(event);
@@ -202,11 +253,14 @@ export default function Studio({ artifacts, notes }: Props) {
 
         switch (event.key) {
           case 'ArrowRight':
-          case 'ArrowLeft':
+          case 'ArrowLeft': {
             if (!idle) return;
             event.preventDefault();
-            step(event.key === 'ArrowRight' ? 1 : -1);
+            const by = event.key === 'ArrowRight' ? 1 : -1;
+            if (compact) goTo(shotAt + by);
+            else step(by);
             break;
+          }
 
           case 'ArrowDown':
           case 'ArrowUp':
@@ -256,11 +310,18 @@ export default function Studio({ artifacts, notes }: Props) {
       host.addEventListener('pointermove', onMove);
       host.addEventListener('pointerleave', onLeave);
       host.addEventListener('click', onClick);
+      if (compact) {
+        host.addEventListener('pointerdown', onDown);
+        host.addEventListener('pointerup', onUp);
+        host.addEventListener('pointercancel', () => (tracking = false));
+      }
 
       cleanup = () => {
         window.removeEventListener('keydown', onKey);
         keyHost?.removeEventListener('focus', onFocus);
         keyHost?.removeEventListener('blur', onBlur);
+        host.removeEventListener('pointerdown', onDown);
+        host.removeEventListener('pointerup', onUp);
         host.removeEventListener('pointermove', onMove);
         host.removeEventListener('pointerleave', onLeave);
         host.removeEventListener('click', onClick);
@@ -294,6 +355,33 @@ export default function Studio({ artifacts, notes }: Props) {
         aria-label="The desk in 3D. Arrow keys move between the things on it, Enter opens a project. Every project is also in the list below."
         hidden={!ready}
       />
+
+      {/*
+        The showroom caption. A real link, not a 3D tap target: on a phone this
+        is how the case study gets opened, and it should not depend on hitting
+        a monitor with a thumb.
+      */}
+      {room && (
+        <div class="studio__shot">
+          <div class="studio__dots" aria-hidden="true">
+            {room.shots.map((s, i) => (
+              <span class={i === room.at ? 'is-on' : ''} />
+            ))}
+          </div>
+          <p class="studio__shotname">{room.shots[room.at]?.name}</p>
+          {room.shots[room.at]?.status && (
+            <p class="studio__shotmeta">{room.shots[room.at].status}</p>
+          )}
+          <a
+            class="studio__shotcta"
+            href={`/work/${room.shots[room.at]?.id}`}
+            data-ev="artifact_open"
+            data-ev-project={room.shots[room.at]?.id}
+          >
+            Open the case study
+          </a>
+        </div>
+      )}
 
       <p class="studio__legend" hidden={!keys} aria-hidden="true">
         <span><kbd>←</kbd><kbd>→</kbd> move</span>
