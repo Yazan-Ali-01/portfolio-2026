@@ -485,5 +485,77 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
   await ctx.close();
 }
 
+// --- 12. Arrival, transitions and reading progress ---------------------------
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  await blockAnalytics(ctx);
+  const page = await ctx.newPage();
+  console.log('\nArrival and polish');
+
+  // The scene used to appear in one frame: black rectangle, then a room.
+  await page.goto(BASE + '/work', { waitUntil: 'domcontentloaded' });
+  const pre = await page.evaluate(() => {
+    const c = document.querySelector('.studio__canvas');
+    return c ? { lit: c.hasAttribute('data-lit'), t: getComputedStyle(c).transitionDuration } : null;
+  });
+  ok(pre && !pre.lit, 'the canvas starts unlit');
+  ok(pre && parseFloat(pre.t) > 0, `and is faded up rather than popped (${pre?.t})`);
+  await page.waitForSelector('.studio__canvas[data-lit]', { timeout: 30000 });
+  ok(true, 'the scene marks itself lit once it exists');
+
+  // One continuous surface between the two worlds, with no router.
+  const vt = await page.evaluate(() =>
+    [...document.styleSheets].some((sheet) => {
+      try {
+        return [...sheet.cssRules].some((r) => /@view-transition/.test(r.cssText));
+      } catch {
+        return false;
+      }
+    }),
+  );
+  ok(vt, 'cross-document view transitions are declared');
+
+  // A duplicate name silently cancels the whole transition.
+  for (const route of ['/story', '/work', '/work/driven']) {
+    await page.goto(BASE + route, { waitUntil: 'domcontentloaded' });
+    const n = await page.evaluate(
+      () => [...document.querySelectorAll('*')].filter((el) => getComputedStyle(el).viewTransitionName === 'worlds').length,
+    );
+    ok(n === 1, `${route} names the nav exactly once (${n})`);
+  }
+
+  // Reading progress, driven by the scroll timeline rather than a listener.
+  await page.goto(BASE + '/work/driven', { waitUntil: 'networkidle' });
+  const width = () =>
+    page.evaluate(() => Math.round(document.querySelector('.cs__progress').getBoundingClientRect().width));
+  ok((await width()) === 0, `the progress line starts empty (${await width()}px)`);
+  await page.evaluate(() => window.scrollTo(0, (document.body.scrollHeight - innerHeight) * 0.5));
+  await page.waitForTimeout(400);
+  const half = await width();
+  ok(half > 400 && half < 900, `it tracks the scroll (${half}px of 1280)`);
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(400);
+  ok((await width()) >= 1270, `and fills at the end (${await width()}px)`);
+  await ctx.close();
+}
+
+// --- 13. None of it runs under reduced motion --------------------------------
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' });
+  await blockAnalytics(ctx);
+  const page = await ctx.newPage();
+  console.log('\nReduced motion');
+
+  await page.goto(BASE + '/work', { waitUntil: 'networkidle' });
+  await page.waitForSelector('.studio__canvas[data-lit]', { timeout: 30000 });
+  const t = await page.evaluate(() => getComputedStyle(document.querySelector('.studio__canvas')).transitionDuration);
+  ok(parseFloat(t) < 0.01, `the canvas does not fade (${t})`);
+
+  await page.goto(BASE + '/work/driven', { waitUntil: 'domcontentloaded' });
+  const d = await page.evaluate(() => getComputedStyle(document.querySelector('.cs__progress')).display);
+  ok(d === 'none', `and there is no progress line (${d})`);
+  await ctx.close();
+}
+
 await browser.close();
 console.log(`\n${fail.length === 0 ? 'ALL CHECKS PASS' : fail.length + ' FAILURES'}`);

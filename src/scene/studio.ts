@@ -637,7 +637,9 @@ export function createStudio(
   // --- light ---------------------------------------------------------------
   scene.add(new AmbientLight(0xffffff, 0.34));
 
-  const key = new SpotLight(0xfff3e6, opts.compact ? 90 : 130, 22, 0.72, 0.55, 1.6);
+  const KEY_INTENSITY = opts.compact ? 90 : 130;
+  const key = new SpotLight(0xfff3e6, KEY_INTENSITY, 22, 0.72, 0.55, 1.6);
+  key.intensity = opts.still ? KEY_INTENSITY : 0;
   key.position.set(-3.2, 4.0, 2.6);
   key.target.position.set(-0.6, DESK.top, DESK.z);
   key.castShadow = !opts.compact;
@@ -752,6 +754,13 @@ export function createStudio(
   let running = false;
   let active = true;
   let last = 0;
+  /*
+   * The page is called "Under the lamp", so the lamp comes on rather than being
+   * on already. Runs once, over the first second, and only the light moves:
+   * nothing shifts position, so it reads as switching on rather than as an
+   * entrance animation. Reduced motion skips straight to lit.
+   */
+  let lampAt = opts.still ? 1 : 0;
   /** Set by the keyboard path; null whenever the pointer is in charge. */
   let forced: Mesh | null = null;
 
@@ -759,6 +768,15 @@ export function createStudio(
     const dt = last === 0 ? 0.016 : Math.min((time - last) / 1000, 0.05);
     last = time;
     const ease = opts.still ? 1 : 1 - Math.exp(-6 * dt);
+
+    if (lampAt < 1) {
+      lampAt = Math.min(1, lampAt + dt / 1.5);
+      // Ease out, so it settles rather than arriving at full brightness.
+      // Smoothstep, not ease-out. An ease-out put the lamp at 90% while the
+      // canvas was still fading in, so the room simply arrived lit and the
+      // ramp was invisible. This one is slowest where it is most visible.
+      key.intensity = KEY_INTENSITY * (lampAt * lampAt * (3 - 2 * lampAt));
+    }
 
     look.x += (lookTarget.x - look.x) * ease;
     look.y += (lookTarget.y - look.y) * ease;

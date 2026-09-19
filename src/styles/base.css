@@ -1,5 +1,23 @@
 @import './tokens.css';
 
+/*
+ * Cross-document view transitions. Native, so this is the whole feature: no
+ * router, no client-side navigation, no JavaScript, and browsers without it
+ * navigate exactly as before. Moving between the gate, the story and the work
+ * stops being a white blink and becomes one continuous surface.
+ */
+@view-transition {
+  navigation: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
 *,
 *::before,
 *::after {
@@ -267,6 +285,73 @@ body {
 }
 
 /* Studio island (E10). Rendered client-side, so styled globally. */
+/* Reading progress on a case study. No bar at all where it cannot be driven. */
+.cs__progress {
+  display: none;
+}
+
+@supports (animation-timeline: scroll()) {
+  @keyframes cs-progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
+  .cs__progress {
+    display: block;
+    position: fixed;
+    inset-block-start: 0;
+    inset-inline: 0;
+    z-index: 20;
+    height: 2px;
+    background: var(--accent);
+    transform-origin: 0 50%;
+    /*
+     * Longhands on purpose. The `animation` shorthand resets duration to 0s,
+     * and a scroll timeline needs `auto` to map onto the whole scroll range,
+     * so the shorthand leaves the bar frozen at zero.
+     */
+    animation-name: cs-progress;
+    animation-timing-function: linear;
+    animation-duration: auto;
+    animation-fill-mode: both;
+    animation-timeline: scroll(root block);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cs__progress {
+      display: none;
+    }
+  }
+}
+
+/*
+ * Arrival. three.js is fetched on demand, so both scenes used to appear in one
+ * frame: a black rectangle, then abruptly a room. The canvas now starts at zero
+ * and is faded up by the island the moment its controller exists, which turns a
+ * pop into something that reads as deliberate.
+ */
+.scene__canvas,
+.studio__canvas {
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+
+.scene__canvas[data-lit],
+.studio__canvas[data-lit] {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene__canvas,
+  .studio__canvas {
+    transition: none;
+  }
+}
+
 .studio__canvas {
   position: absolute;
   inset: 0;

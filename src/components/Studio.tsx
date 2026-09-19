@@ -350,7 +350,7 @@ export default function Studio({ artifacts, notes }: Props) {
 
   return (
     <>
-      <canvas ref={canvasRef} class="studio__canvas" aria-hidden="true" />
+      <canvas ref={canvasRef} class="studio__canvas" aria-hidden="true" data-lit={ready ? "" : undefined} />
 
       {/*
         Focusable, but transparent to the pointer, so a mouse never touches it

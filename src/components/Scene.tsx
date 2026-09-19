@@ -19,6 +19,8 @@ export default function Scene() {
   const [debug, setDebug] = useState(false);
   const [debugValue, setDebugValue] = useState(0);
   const [size, setCanvasSize] = useState<[number, number]>([0, 0]);
+  /** three.js resolves whenever it resolves; until it does the canvas is empty. */
+  const [lit, setLit] = useState(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -35,6 +37,7 @@ export default function Scene() {
         return;
       }
       controllerRef.current = controller;
+      setLit(true);
 
       // NOT canvas.parentElement: Astro wraps islands in <astro-island>, which is
       // `display: contents` and therefore has no box at all. Measuring it yields
@@ -110,7 +113,7 @@ export default function Scene() {
 
   return (
     <>
-      <canvas ref={canvasRef} class="scene__canvas" />
+      <canvas ref={canvasRef} class="scene__canvas" data-lit={lit ? "" : undefined} />
       {debug && (
         <div class="scene__debug">
           <input

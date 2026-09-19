@@ -41,6 +41,14 @@ const { current, trail } = Astro.props;
 
 <style>
   .worlds {
+    /*
+     * Named, so the browser carries this one element across a navigation
+     * instead of crossfading it with the rest of the page. The chrome stays
+     * put while the content changes underneath it, which is what makes moving
+     * between the two worlds feel like one surface rather than two loads.
+     */
+    view-transition-name: worlds;
+
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;

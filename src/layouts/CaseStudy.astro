@@ -36,6 +36,13 @@ const others = projects.filter((p) => p.id !== project.id);
   image={`/og/${project.id}.jpg`}
   imageAlt={`${project.name}: ${d.title}`}
 >
+  {/*
+    How far through a thousand words you are. Driven by the scroll timeline
+    itself, so there is no scroll listener and no JavaScript: browsers without
+    scroll-driven animations get no bar rather than a broken one.
+  */}
+  <div class="cs__progress" aria-hidden="true"></div>
+
   <article class="cs">
     <div class="cs__top u-shell--story">
       <div class="cs__nav">
