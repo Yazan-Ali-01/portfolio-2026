@@ -24,23 +24,12 @@ export type Project = {
   };
 };
 
+/*
+ * Array order is the order everything reads: the work index, the gate's list,
+ * and the "also on the desk" links under a case study. The room is the one
+ * exception, because there the order is physical, left to right along the desk.
+ */
 export const projects: Project[] = [
-  {
-    id: 'driven',
-    name: 'Driven Properties',
-    proposition: 'A property search that did not filter, rebuilt around one canonical hierarchy.',
-    role: 'Senior engineer, rebuild lead',
-    period: '2024–present',
-    status: 'Live in production',
-    liveUrl: 'https://www.drivenproperties.com/properties-for-sale-in-dubai',
-    artifact: {
-      kind: 'screen',
-      src: '/work/driven-listings.png',
-      alt: 'The rebuilt Driven Properties listings page: filter bar, property type facets, and 11,038 results.',
-      caption:
-        'The rebuilt search, live. One canonical URL, one filtering contract, 11,038 listings behind it.',
-    },
-  },
   {
     id: 'complytude',
     name: 'Complytude',
@@ -55,6 +44,22 @@ export const projects: Project[] = [
       alt: 'Architecture diagram: client requests hit a Fastify API with row-level security, which enqueues heavy work onto BullMQ over Redis; ingestion and AI workers consume the queue using tenant-isolated S3 storage, a legal-text retrieval corpus, and Anthropic and OpenAI providers.',
       caption:
         'The request path stays synchronous and fast. Generation and analysis run asynchronously on isolated workers. Accent lines trace the AI path.',
+    },
+  },
+  {
+    id: 'driven',
+    name: 'Driven Properties',
+    proposition: 'A property search that did not filter, rebuilt around one canonical hierarchy.',
+    role: 'Senior engineer, rebuild lead',
+    period: '2024–present',
+    status: 'Live in production',
+    liveUrl: 'https://www.drivenproperties.com/properties-for-sale-in-dubai',
+    artifact: {
+      kind: 'screen',
+      src: '/work/driven-listings.png',
+      alt: 'The rebuilt Driven Properties listings page: filter bar, property type facets, and 11,038 results.',
+      caption:
+        'The rebuilt search, live. One canonical URL, one filtering contract, 11,038 listings behind it.',
     },
   },
   {
