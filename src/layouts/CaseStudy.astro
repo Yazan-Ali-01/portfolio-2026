@@ -16,7 +16,6 @@ interface Props {
       stack: string[];
       status: string;
       liveUrl?: string;
-      order: number;
       needsReview: boolean;
     };
   };
@@ -25,7 +24,12 @@ interface Props {
 
 const { entry, project } = Astro.props;
 const d = entry.data;
-const index = String(d.order).padStart(2, '0');
+/*
+ * Taken from the project list, not from frontmatter. A number written into the
+ * markdown drifts the moment the list is reordered: Complytude moved to the
+ * top and its page still said 02.
+ */
+const index = String(projects.findIndex((p) => p.id === project.id) + 1).padStart(2, '0');
 const others = projects.filter((p) => p.id !== project.id);
 ---
 
@@ -43,7 +47,7 @@ const others = projects.filter((p) => p.id !== project.id);
   */}
   <div class="cs__progress" aria-hidden="true"></div>
 
-  <article class="cs">
+  <article class="cs" data-case={project.id}>
     <div class="cs__top u-shell--story">
       <div class="cs__nav">
         <WorldSwitch current="work" trail={project.name} />
@@ -147,8 +151,18 @@ const others = projects.filter((p) => p.id !== project.id);
     <Close from={`case:${project.id}`} />
   </article>
 
-  <script define:vars={{ slug: project.id }}>
-    import('../lib/analytics').then(({ trackDepth }) => trackDepth(`case:${slug}`));
+  {/*
+    A plain script, so Astro bundles it and resolves the import at build time.
+    With `define:vars` the script is emitted inline instead, and the browser
+    resolved '../lib/analytics' against the page URL: every case study asked
+    for /lib/analytics, got a 404, and scroll depth was never recorded once.
+    The slug rides on the article rather than through define:vars.
+  */}
+  <script>
+    import { trackDepth } from '../lib/analytics';
+
+    const slug = document.querySelector('[data-case]')?.getAttribute('data-case');
+    if (slug) trackDepth(`case:${slug}`);
   </script>
 </Story>
 
@@ -288,12 +302,14 @@ const others = projects.filter((p) => p.id !== project.id);
   }
 
   .spec__links a {
+    /* Standalone outbound links, padded to clear a 24px target on a phone. */
+    display: inline-block;
     font-family: var(--face-data);
     font-size: 0.75rem;
     color: var(--accent);
     text-decoration: none;
     border-bottom: 1px solid var(--accent-dim);
-    padding-bottom: 2px;
+    padding-block: 0.2rem 2px;
   }
 
   .spec__links a:hover {

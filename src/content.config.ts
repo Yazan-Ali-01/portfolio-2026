@@ -14,7 +14,6 @@ const caseStudies = defineCollection({
     status: z.string(),
     liveUrl: z.string().url().optional(),
     sourceUrl: z.string().url().optional(),
-    order: z.number(),
     /**
      * True when the technical detail is drafted rather than sourced from Yazan.
      * Nothing with this flag ships without his review.

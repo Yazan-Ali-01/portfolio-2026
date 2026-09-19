@@ -94,6 +94,9 @@ const { from } = Astro.props;
   }
 
   .close__links a {
+    /* Standalone links, so they carry a target rather than just a line of text. */
+    display: inline-block;
+    padding-block: 0.2rem;
     color: var(--ink-muted);
     text-decoration: none;
     border-bottom: 1px solid transparent;

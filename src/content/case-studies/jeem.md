@@ -7,7 +7,6 @@ period: 'Contract'
 stack: ['Next.js 15', 'TypeScript', 'SSE', 'React', 'CSS architecture']
 status: 'Live in beta'
 liveUrl: 'https://jeem.ai/'
-order: 3
 ---
 
 ## A rewrite with a moving target

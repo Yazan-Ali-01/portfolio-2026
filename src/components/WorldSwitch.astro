@@ -62,6 +62,8 @@ const { current, trail } = Astro.props;
     font-weight: 600;
     color: var(--ink);
     text-decoration: none;
+    /* 21px of text is under the 24px minimum for a standalone target. */
+    padding-block: 0.2rem;
   }
 
   .worlds__mark:hover {

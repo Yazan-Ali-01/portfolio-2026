@@ -557,5 +557,59 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
   await ctx.close();
 }
 
+// --- 14. Nothing 404s, and every target is thumb-sized -----------------------
+{
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  await blockAnalytics(ctx);
+  const page = await ctx.newPage();
+  console.log('\nBroken requests and tap targets');
+
+  const routes = ['/', '/story', '/work', '/work/driven', '/work/complytude', '/work/jeem', '/hi'];
+
+  /*
+   * Every case study used to request /lib/analytics and get a 404, so scroll
+   * depth was never recorded once. `define:vars` emits a script inline, and the
+   * browser then resolved the relative import against the page URL instead of
+   * Astro resolving it at build time. Cheap to check for every page at once.
+   */
+  const failed = [];
+  page.on('response', (r) => {
+    if (r.status() >= 400) failed.push(`${r.status()} ${r.url().replace(BASE, '')}`);
+  });
+
+  let undersized = [];
+  for (const route of routes) {
+    await page.goto(BASE + route, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(1600);
+    const small = await page.evaluate(() =>
+      [...document.querySelectorAll('a,button')]
+        .map((el) => ({ el, b: el.getBoundingClientRect() }))
+        // Links inside running prose are exempt: WCAG 2.5.8 covers standalone
+        // targets, not words in a sentence.
+        .filter(({ el, b }) => b.width > 0 && b.height > 0 && b.height < 24 && !el.closest('.prose'))
+        .map(({ el, b }) => `${Math.round(b.height)}px "${(el.textContent || '').trim().slice(0, 18)}"`),
+    );
+    if (small.length) undersized.push(`${route}: ${small.join(', ')}`);
+  }
+
+  ok(failed.length === 0, `no request fails across all ${routes.length} pages (${failed.slice(0, 3).join(', ') || 'none'})`);
+  ok(undersized.length === 0, `every standalone target clears 24px (${undersized.slice(0, 2).join(' | ') || 'all pass'})`);
+
+  // The number on a case study has to match its place in the list.
+  for (const [route, want] of [['/work/complytude', '01'], ['/work/driven', '02'], ['/work/jeem', '03']]) {
+    await page.goto(BASE + route, { waitUntil: 'domcontentloaded' });
+    const n = (await page.locator('.cs__index').innerText()).trim();
+    ok(n === want, `${route} is numbered ${n}`);
+  }
+
+  // The depth tracking has to actually ship with the page it measures.
+  await page.goto(BASE + '/work/driven', { waitUntil: 'domcontentloaded' });
+  const wired = await page.evaluate(() =>
+    [...document.querySelectorAll('script[src]')].some((s) => s.src.includes('CaseStudy.astro')),
+  );
+  ok(wired, 'the case study script is bundled rather than inlined');
+  await ctx.close();
+}
+
 await browser.close();
 console.log(`\n${fail.length === 0 ? 'ALL CHECKS PASS' : fail.length + ' FAILURES'}`);

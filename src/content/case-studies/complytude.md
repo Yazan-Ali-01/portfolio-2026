@@ -7,7 +7,6 @@ period: 'Side project'
 stack: ['NestJS 11', 'Fastify', 'PostgreSQL 16', 'BullMQ', 'Redis', 'AWS S3', 'Docker']
 sourceUrl: 'https://github.com/Yazan-Ali-01/complytude-backend'
 status: 'Backend ~80%, paused deliberately, source public'
-order: 2
 ---
 
 ## What it was, and the constraints that shaped every decision

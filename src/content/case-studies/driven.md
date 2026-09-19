@@ -7,7 +7,6 @@ period: '2024–present'
 stack: ['Next.js', 'TypeScript', 'SSR', 'Layered caching', 'Headless CMS']
 status: 'Live in production'
 liveUrl: 'https://www.drivenproperties.com/properties-for-sale-in-dubai'
-order: 1
 ---
 
 ## A search system that did not search
