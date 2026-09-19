@@ -79,21 +79,35 @@ export const vcard =
   ].join('\r\n') + '\r\n';
 
 /*
- * What he builds with, in the order a reader scans: the interface first,
- * then what is behind it. Kept to eight, because this has to fit two lines on
- * a 360px phone without pushing the actions off the screen, and a stranger
- * scanning for fifteen seconds reads a short list and skips a long one.
+ * The stack, grouped the way the description reads: the interface, then what
+ * is behind it, then what it runs on. The grouping is the point. A flat list
+ * says "knows some tools"; three layers say "builds the whole thing", which is
+ * the actual claim.
+ *
+ * Each carries its own brand colour, used only as a marker. The words stay in
+ * the page's palette, because eight saturated colours of text on a dark page
+ * is confetti, while eight small marks read as a legend. Postgres and Next are
+ * lightened from their official values, which are too dark to see here.
  */
 export const stack = [
-  'TypeScript',
-  'React',
-  'Next.js',
-  'NestJS',
-  'PostgreSQL',
-  'Redis',
-  'AWS',
-  'Docker',
+  { layer: 'interface', items: [
+    { name: 'TypeScript', color: '#3178C6' },
+    { name: 'React', color: '#61DAFB' },
+    { name: 'Next.js', color: '#E8E8E8' },
+  ] },
+  { layer: 'services', items: [
+    { name: 'NestJS', color: '#E0234E' },
+    { name: 'PostgreSQL', color: '#5B8DD9' },
+    { name: 'Redis', color: '#FF4438' },
+  ] },
+  { layer: 'platform', items: [
+    { name: 'AWS', color: '#FF9900' },
+    { name: 'Docker', color: '#2496ED' },
+  ] },
 ];
+
+/** Flat, for the one sentence a screen reader should hear. */
+export const stackNames = stack.flatMap((row) => row.items.map((i) => i.name));
 
 /** Prefilled so the first message costs one tap and no typing. */
 export const whatsappHref = `https://wa.me/${CONTACT.phone}?text=${encodeURIComponent(

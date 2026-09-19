@@ -338,23 +338,33 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
     })),
   );
   /*
-   * The stack. It has to be readable at a glance and must not cost the actions
-   * their place on the screen, which is why it is capped at eight and two lines.
+   * The stack. Three layers, because the grouping is the claim: a flat list
+   * says "knows some tools". It still has to fit without costing the actions
+   * their place on the screen.
    */
   const stack = await page.evaluate(() => {
-    const p = document.querySelector('.hi__stack');
-    const spans = [...p.querySelectorAll('span')];
+    const dl = document.querySelector('.hi__stack');
+    const rows = [...dl.querySelectorAll('.hi__layer')];
+    const items = [...dl.querySelectorAll('.hi__layer dd span')];
     return {
-      count: spans.length,
-      lines: new Set(spans.map((s) => Math.round(s.getBoundingClientRect().top))).size,
-      label: p.getAttribute('aria-label') || '',
-      hidden: spans.every((s) => s.getAttribute('aria-hidden') === 'true'),
+      rows: rows.length,
+      labels: rows.map((r) => r.querySelector('dt').textContent.trim()),
+      count: items.length,
+      // One line per layer: a wrap here means the label column has lost.
+      lines: new Set(items.map((i) => Math.round(i.getBoundingClientRect().top))).size,
+      marks: new Set(
+        items.map((i) => getComputedStyle(i, '::before').backgroundColor),
+      ).size,
+      label: dl.getAttribute('aria-label') || '',
+      hidden: rows.every((r) => r.getAttribute('aria-hidden') === 'true'),
     };
   });
   ok(stack.count === 8, `the stack shows eight things (${stack.count})`);
-  ok(stack.lines <= 2, `over no more than two lines (${stack.lines})`);
-  ok(/TypeScript/.test(stack.label) && /Docker/.test(stack.label), 'and reads as one list for a screen reader');
-  ok(stack.hidden, 'with the individual words hidden from it');
+  ok(stack.rows === 3, `grouped into three layers (${stack.labels.join(', ')})`);
+  ok(stack.lines === 3, `one line per layer, nothing wraps (${stack.lines})`);
+  ok(stack.marks >= 7, `each carries its own brand colour (${stack.marks} distinct)`);
+  ok(/TypeScript/.test(stack.label) && /Docker/.test(stack.label), 'and reads as one sentence for a screen reader');
+  ok(stack.hidden, 'with the layer rows hidden from it');
 
   ok(actions.length === 5, `five actions and nothing else (${actions.length})`);
   ok(actions[1].label.includes('WhatsApp'), `WhatsApp is its own button, second (${actions[1].label})`);
