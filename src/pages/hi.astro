@@ -1,6 +1,6 @@
 ---
 import Story from '../layouts/Story.astro';
-import { contact, copy, whatsappHref } from '../content/hi';
+import { contact, copy, stack, whatsappHref } from '../content/hi';
 import { meta } from '../content/meta';
 
 /**
@@ -32,6 +32,18 @@ const STORY_URL = '/story';
         interface down to the infrastructure.
       </p>
       <p class="hi__status">{copy.status}</p>
+
+      {/*
+        The stack. One list for a screen reader, spans for the eye: each word
+        arrives in the accent and settles to dim, the way the lamp comes up on
+        the work page. Nothing loops, because a page someone reads for fifteen
+        seconds should not keep moving while they read it.
+      */}
+      <p class="hi__stack" aria-label={`Works with ${stack.join(', ')}`}>
+        {stack.map((tech, i) => (
+          <span aria-hidden="true" style={`--i:${i}`}>{tech}</span>
+        ))}
+      </p>
     </div>
 
     <!--
@@ -97,6 +109,35 @@ const STORY_URL = '/story';
     margin-bottom: var(--space-sm);
     font-size: var(--text-sm);
     color: var(--ink);
+  }
+
+  .hi__stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem 1.1rem;
+    margin: var(--space-xs) 0 0;
+    font-size: 0.78rem;
+    line-height: 1.55;
+    color: var(--ink-muted);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes hi-tech {
+      from {
+        opacity: 0;
+        transform: translateY(0.3em);
+        color: var(--accent);
+      }
+      60% {
+        color: var(--accent);
+      }
+    }
+
+    .hi__stack span {
+      /* calc off --i, so the order is the markup's rather than eight rules. */
+      animation: hi-tech 0.5s ease-out backwards;
+      animation-delay: calc(0.32s + var(--i) * 0.05s);
+    }
   }
 
   /* The dot is the only ornament on the page, and it marks the one live fact. */

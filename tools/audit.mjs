@@ -337,6 +337,25 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
       href: a.getAttribute('href'),
     })),
   );
+  /*
+   * The stack. It has to be readable at a glance and must not cost the actions
+   * their place on the screen, which is why it is capped at eight and two lines.
+   */
+  const stack = await page.evaluate(() => {
+    const p = document.querySelector('.hi__stack');
+    const spans = [...p.querySelectorAll('span')];
+    return {
+      count: spans.length,
+      lines: new Set(spans.map((s) => Math.round(s.getBoundingClientRect().top))).size,
+      label: p.getAttribute('aria-label') || '',
+      hidden: spans.every((s) => s.getAttribute('aria-hidden') === 'true'),
+    };
+  });
+  ok(stack.count === 8, `the stack shows eight things (${stack.count})`);
+  ok(stack.lines <= 2, `over no more than two lines (${stack.lines})`);
+  ok(/TypeScript/.test(stack.label) && /Docker/.test(stack.label), 'and reads as one list for a screen reader');
+  ok(stack.hidden, 'with the individual words hidden from it');
+
   ok(actions.length === 5, `five actions and nothing else (${actions.length})`);
   ok(actions[1].label.includes('WhatsApp'), `WhatsApp is its own button, second (${actions[1].label})`);
   ok(actions.every((a) => a.h >= 44), `every target clears 44px (smallest ${Math.min(...actions.map((a) => a.h))}px)`);

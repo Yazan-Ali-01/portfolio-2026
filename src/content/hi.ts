@@ -78,6 +78,23 @@ export const vcard =
     'END:VCARD',
   ].join('\r\n') + '\r\n';
 
+/*
+ * What he builds with, in the order a reader scans: the interface first,
+ * then what is behind it. Kept to eight, because this has to fit two lines on
+ * a 360px phone without pushing the actions off the screen, and a stranger
+ * scanning for fifteen seconds reads a short list and skips a long one.
+ */
+export const stack = [
+  'TypeScript',
+  'React',
+  'Next.js',
+  'NestJS',
+  'PostgreSQL',
+  'Redis',
+  'AWS',
+  'Docker',
+];
+
 /** Prefilled so the first message costs one tap and no typing. */
 export const whatsappHref = `https://wa.me/${CONTACT.phone}?text=${encodeURIComponent(
   'Hi Yazan, I scanned your shirt.',
