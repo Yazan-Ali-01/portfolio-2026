@@ -1,6 +1,7 @@
 ---
 import Story from '../layouts/Story.astro';
-import { contact, copy, stack, stackNames, whatsappHref } from '../content/hi';
+import { contact, copy, whatsappHref } from '../content/hi';
+import { stack, stackNames } from '../content/stack';
 import { meta } from '../content/meta';
 
 /**
@@ -47,7 +48,12 @@ const STORY_URL = '/story';
             <dt>{row.layer}</dt>
             <dd>
               {row.items.map((tech, i) => (
-                <span style={`--c:${tech.color};--i:${r * 3 + i}`}>{tech.name}</span>
+                <span style={`--c:${tech.color};--i:${r * 3 + i}`}>
+                  <svg viewBox={tech.viewBox} focusable="false" role="presentation">
+                    <path d={tech.path} fill="currentColor" />
+                  </svg>
+                  {tech.label && tech.name}
+                </span>
               ))}
             </dd>
           </div>
@@ -124,14 +130,17 @@ const STORY_URL = '/story';
   .hi__stack {
     margin: var(--space-xs) 0 0;
     font-size: 0.75rem;
-    line-height: 1.5;
+    line-height: 1.7;
   }
 
-  /* Label column sized to the longest label, so the rows line up as a block. */
+  /*
+   * max-content, not a guessed em width. The column was narrower than the word
+   * "interface", so the label ran right up against the first mark.
+   */
   .hi__layer {
     display: grid;
-    grid-template-columns: 5.4em 1fr;
-    gap: 0 0.7em;
+    grid-template-columns: max-content 1fr;
+    gap: 0 0.75em;
   }
 
   .hi__layer dt {
@@ -142,20 +151,44 @@ const STORY_URL = '/story';
   .hi__layer dd {
     display: flex;
     flex-wrap: wrap;
-    gap: 0 0.85em;
+    align-items: center;
+    gap: 0.15em 0.7em;
     margin: 0;
     color: var(--ink);
   }
 
-  /* The mark. Six pixels of the real brand colour is enough to recognise. */
-  .hi__layer span::before {
-    content: '';
-    display: inline-block;
-    width: 0.5em;
-    height: 0.5em;
-    margin-right: 0.45em;
-    vertical-align: 0.04em;
-    background: var(--c);
+  .hi__layer span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    color: var(--ink);
+  }
+
+  /*
+   * Height is fixed and width is free, because these are not all square: the
+   * AWS wordmark is 1.67:1 and everything else is 1:1. Letting width follow the
+   * viewBox keeps every mark the same visual weight instead of squashing one.
+   */
+  .hi__layer svg {
+    height: 1.5em;
+    width: auto;
+    flex: none;
+    color: var(--c);
+  }
+
+  /*
+   * Under 375px the interface row runs out of width and wraps, which costs a
+   * line and pushes the actions off the screen. Tightening the two gaps buys
+   * back the eight pixels it needs.
+   */
+  @media (max-width: 23.4rem) {
+    .hi__layer {
+      gap: 0 0.5em;
+    }
+
+    .hi__layer dd {
+      gap: 0.15em 0.5em;
+    }
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -168,7 +201,8 @@ const STORY_URL = '/story';
 
     @keyframes hi-mark {
       from {
-        transform: scale(0.2);
+        transform: scale(0.3);
+        opacity: 0;
       }
     }
 
@@ -177,7 +211,7 @@ const STORY_URL = '/story';
       animation-delay: calc(0.32s + var(--i) * 0.05s);
     }
 
-    .hi__layer span::before {
+    .hi__layer svg {
       animation: hi-mark 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) backwards;
       animation-delay: calc(0.32s + var(--i) * 0.05s);
     }

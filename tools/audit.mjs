@@ -350,19 +350,22 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
       rows: rows.length,
       labels: rows.map((r) => r.querySelector('dt').textContent.trim()),
       count: items.length,
-      // One line per layer: a wrap here means the label column has lost.
-      lines: new Set(items.map((i) => Math.round(i.getBoundingClientRect().top))).size,
-      marks: new Set(
-        items.map((i) => getComputedStyle(i, '::before').backgroundColor),
-      ).size,
+      // A wrap means the label column has lost and a line has been spent.
+      wrapped: rows.some((r) => r.querySelector('dd').getBoundingClientRect().height > 30),
+      svgs: dl.querySelectorAll('svg').length,
+      marks: new Set(items.map((i) => getComputedStyle(i.querySelector('svg')).color)).size,
+      // AWS is a wordmark and carries its own name, so it has no text label.
+      unlabelled: items.filter((i) => !i.textContent.trim()).length,
       label: dl.getAttribute('aria-label') || '',
       hidden: rows.every((r) => r.getAttribute('aria-hidden') === 'true'),
     };
   });
   ok(stack.count === 8, `the stack shows eight things (${stack.count})`);
   ok(stack.rows === 3, `grouped into three layers (${stack.labels.join(', ')})`);
-  ok(stack.lines === 3, `one line per layer, nothing wraps (${stack.lines})`);
-  ok(stack.marks >= 7, `each carries its own brand colour (${stack.marks} distinct)`);
+  ok(!stack.wrapped, 'no layer wraps onto a second line');
+  ok(stack.svgs === 8, `each is a real brand mark (${stack.svgs} inline svg)`);
+  ok(stack.marks >= 7, `tinted with its own brand colour (${stack.marks} distinct)`);
+  ok(stack.unlabelled === 1, `only the AWS wordmark goes unlabelled (${stack.unlabelled})`);
   ok(/TypeScript/.test(stack.label) && /Docker/.test(stack.label), 'and reads as one sentence for a screen reader');
   ok(stack.hidden, 'with the layer rows hidden from it');
 
