@@ -360,11 +360,15 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
       hidden: rows.every((r) => r.getAttribute('aria-hidden') === 'true'),
     };
   });
-  ok(stack.count === 8, `the stack shows eight things (${stack.count})`);
-  ok(stack.rows === 3, `grouped into three layers (${stack.labels.join(', ')})`);
+  /*
+   * Structure, not counts. The stack changes often, and a hardcoded "eight
+   * things" just fails on the next edit without catching anything real.
+   */
+  ok(stack.rows >= 3, `grouped into layers (${stack.labels.join(', ')})`);
+  ok(stack.count >= stack.rows * 2, `every layer carries more than one thing (${stack.count} in ${stack.rows})`);
   ok(!stack.wrapped, 'no layer wraps onto a second line');
-  ok(stack.svgs === 8, `each is a real brand mark (${stack.svgs} inline svg)`);
-  ok(stack.marks >= 7, `tinted with its own brand colour (${stack.marks} distinct)`);
+  ok(stack.svgs === stack.count, `every item has a real mark (${stack.svgs} of ${stack.count})`);
+  ok(stack.marks >= stack.count - 2, `tinted with its own colour (${stack.marks} distinct of ${stack.count})`);
   ok(stack.unlabelled === 1, `only the AWS wordmark goes unlabelled (${stack.unlabelled})`);
   ok(/TypeScript/.test(stack.label) && /Docker/.test(stack.label), 'and reads as one sentence for a screen reader');
   ok(stack.hidden, 'with the layer rows hidden from it');

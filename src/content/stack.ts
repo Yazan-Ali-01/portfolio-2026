@@ -6,9 +6,14 @@
    would be a dependency this page is not allowed. Single monochrome paths,
    tinted at render with each brand's own colour.
 
-   Source: Simple Icons, except AWS. Amazon is not in Simple Icons, so that one
-   is devicon's wordmark, cropped to its own bounds. It carries its lettering,
-   which is why it is the one mark shown without a label beside it.
+   Sources: Simple Icons for the brands. AWS is devicon's wordmark cropped to
+   its own bounds, because Amazon is in neither set. RAG is not a brand at all,
+   so it takes a generic retrieval glyph in the page's dim ink rather than a
+   colour it has no claim to. Terraform is lightened from #7B42BC, which is too
+   dark to read against this background.
+
+   Every row has to stay on one line on a 390px phone. That is the constraint
+   that decides how many things can be in one.
    --------------------------------------------------------------------------- */
 
 export type Mark = {
@@ -16,13 +21,13 @@ export type Mark = {
   color: string;
   viewBox: string;
   path: string;
-  /** AWS is a wordmark: it says its own name. */
+  /** AWS is a wordmark: it already says its own name. */
   label: boolean;
 };
 
 export const stack: { layer: string; items: Mark[] }[] = [
   {
-    layer: 'interface',
+    layer: 'frontend',
     items: [
       {
         name: 'TypeScript',
@@ -48,7 +53,7 @@ export const stack: { layer: string; items: Mark[] }[] = [
     ],
   },
   {
-    layer: 'services',
+    layer: 'backend',
     items: [
       {
         name: 'NestJS',
@@ -74,7 +79,7 @@ export const stack: { layer: string; items: Mark[] }[] = [
     ],
   },
   {
-    layer: 'platform',
+    layer: 'infra',
     items: [
       {
         name: 'AWS',
@@ -89,6 +94,39 @@ export const stack: { layer: string; items: Mark[] }[] = [
         viewBox: '0 0 24 24',
         label: true,
         path: 'M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288Z',
+      },
+      {
+        name: 'Terraform',
+        color: '#9B6BE0',
+        viewBox: '0 0 24 24',
+        label: true,
+        path: 'M1.44 0v7.575l6.561 3.79V3.787zm21.12 4.227l-6.561 3.791v7.574l6.56-3.787zM8.72 4.23v7.575l6.561 3.787V8.018zm0 8.405v7.575L15.28 24v-7.578z',
+      },
+    ],
+  },
+  {
+    layer: 'ai',
+    items: [
+      {
+        name: 'Claude Code',
+        color: '#D97757',
+        viewBox: '0 0 24 24',
+        label: true,
+        path: 'M21 10.5h3v3h-3v3h-1.5v3H18v-3h-1.5v3H15v-3H9v3H7.5v-3H6v3H4.5v-3H3v-3H0v-3h3v-6h18Zm-15 0h1.5v-3H6Zm10.5 0H18v-3h-1.5z',
+      },
+      {
+        name: 'Cursor',
+        color: '#E8E8E8',
+        viewBox: '0 0 24 24',
+        label: true,
+        path: 'M11.503.131 1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23',
+      },
+      {
+        name: 'RAG',
+        color: '#97A3B2',
+        viewBox: '0 0 24 24',
+        label: true,
+        path: 'M18.68 12.32a4.49 4.49 0 0 0-6.36.01a4.49 4.49 0 0 0 0 6.36a4.51 4.51 0 0 0 5.57.63L21 22.39L22.39 21l-3.09-3.11c1.13-1.77.87-4.09-.62-5.57m-1.41 4.95c-.98.98-2.56.97-3.54 0c-.97-.98-.97-2.56.01-3.54c.97-.97 2.55-.97 3.53 0c.97.98.97 2.56 0 3.54M10.9 20.1a6.5 6.5 0 0 1-1.48-2.32C6.27 17.25 4 15.76 4 14v3c0 2.21 3.58 4 8 4c-.4-.26-.77-.56-1.1-.9M4 9v3c0 1.68 2.07 3.12 5 3.7v-.2c0-.93.2-1.85.58-2.69C6.34 12.3 4 10.79 4 9m8-6C7.58 3 4 4.79 4 7c0 2 3 3.68 6.85 4h.05c1.2-1.26 2.86-2 4.6-2c.91 0 1.81.19 2.64.56A3.22 3.22 0 0 0 20 7c0-2.21-3.58-4-8-4',
       },
     ],
   },

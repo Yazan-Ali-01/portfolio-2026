@@ -29,8 +29,7 @@ const STORY_URL = '/story';
     <div class="hi__id">
       <h1 class="hi__name">{meta.name}</h1>
       <p class="hi__what">
-        Software engineer in Dubai. I build web products end to end, from the
-        interface down to the infrastructure.
+        Software engineer in Dubai. I build web products end to end.
       </p>
       <p class="hi__status">{copy.status}</p>
 
@@ -44,11 +43,11 @@ const STORY_URL = '/story';
       */}
       <dl class="hi__stack" aria-label={`Works with ${stackNames.join(', ')}`}>
         {stack.map((row, r) => (
-          <div class="hi__layer" aria-hidden="true">
+          <div class="hi__layer" aria-hidden="true" style={`--r:${r}`}>
             <dt>{row.layer}</dt>
             <dd>
               {row.items.map((tech, i) => (
-                <span style={`--c:${tech.color};--i:${r * 3 + i}`}>
+                <span style={`--c:${tech.color};--i:${i}`}>
                   <svg viewBox={tech.viewBox} focusable="false" role="presentation">
                     <path d={tech.path} fill="currentColor" />
                   </svg>
@@ -128,9 +127,12 @@ const STORY_URL = '/story';
   }
 
   .hi__stack {
-    margin: var(--space-xs) 0 0;
+    /* Air between the layers, so the four rows read as four rather than a block. */
+    display: grid;
+    row-gap: 0.58rem;
+    margin: 0.7rem 0 0;
     font-size: 0.75rem;
-    line-height: 1.7;
+    line-height: 1.62;
   }
 
   /*
@@ -140,7 +142,7 @@ const STORY_URL = '/story';
   .hi__layer {
     display: grid;
     grid-template-columns: max-content 1fr;
-    gap: 0 0.75em;
+    gap: 0.1em 0.9em;
   }
 
   .hi__layer dt {
@@ -152,7 +154,7 @@ const STORY_URL = '/story';
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.15em 0.7em;
+    gap: 0.3em 1.15em;
     margin: 0;
     color: var(--ink);
   }
@@ -160,7 +162,7 @@ const STORY_URL = '/story';
   .hi__layer span {
     display: inline-flex;
     align-items: center;
-    gap: 0.35em;
+    gap: 0.5em;
     color: var(--ink);
   }
 
@@ -183,11 +185,11 @@ const STORY_URL = '/story';
    */
   @media (max-width: 23.4rem) {
     .hi__layer {
-      gap: 0 0.5em;
+      gap: 0.1em 0.7em;
     }
 
     .hi__layer dd {
-      gap: 0.15em 0.5em;
+      gap: 0.3em 0.9em;
     }
   }
 
@@ -208,12 +210,12 @@ const STORY_URL = '/story';
 
     .hi__layer span {
       animation: hi-tech 0.45s ease-out backwards;
-      animation-delay: calc(0.32s + var(--i) * 0.05s);
+      animation-delay: calc(0.3s + var(--r) * 0.12s + var(--i) * 0.045s);
     }
 
     .hi__layer svg {
       animation: hi-mark 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) backwards;
-      animation-delay: calc(0.32s + var(--i) * 0.05s);
+      animation-delay: calc(0.3s + var(--r) * 0.12s + var(--i) * 0.045s);
     }
   }
 
