@@ -374,13 +374,19 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
   ok(stack.hidden, 'with the layer rows hidden from it');
 
   ok(actions.length === 5, `five actions and nothing else (${actions.length})`);
-  ok(actions[1].label.includes('WhatsApp'), `WhatsApp is its own button, second (${actions[1].label})`);
+
+  /*
+   * The three places to read come first and the two ways to make contact come
+   * last, nearest the thumb. The card holds its weight by being the only
+   * filled element, not by being first.
+   */
+  const reads = actions.slice(0, 3).map((a) => a.label).join(', ');
+  ok(reads === 'My work, My story, LinkedIn', `the places to read lead, in order (${reads})`);
+  ok(actions[4].label.includes('WhatsApp'), `WhatsApp is last (${actions[4].label})`);
   ok(actions.every((a) => a.h >= 44), `every target clears 44px (smallest ${Math.min(...actions.map((a) => a.h))}px)`);
   ok(actions.every((a) => a.bottom <= 844), 'every target is inside the viewport');
 
-  ok(actions[0].href === '/hi.vcf', `the card is the first action (${actions[0].href})`);
-  const order = actions.slice(2).map((a) => a.label).join(', ');
-  ok(order === 'My work, My story, LinkedIn', `the places to read, in order (${order})`);
+  ok(actions[3].href === '/hi.vcf', `the contact card sits above WhatsApp (${actions[3].href})`);
 
   const wa = actions.find((a) => a.href.includes('wa.me')).href;
   ok(/^https:\/\/wa\.me\/971528556635\?text=/.test(wa), `wa.me deep link, digits only (${wa.split('?')[0]})`);

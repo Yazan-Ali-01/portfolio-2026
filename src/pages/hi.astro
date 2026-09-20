@@ -7,9 +7,10 @@ import { meta } from '../content/meta';
 /**
  * The shirt page. A stranger, on a phone, one-handed, fifteen seconds.
  *
- * Read in the order it is used: where they came from, who this is, then the one
- * thing worth doing, then four places to go. Nothing else on the page, and
- * nothing below the fold at 390x844.
+ * Read in the order it is used: where they came from, who this is, the three
+ * places to look, then the two ways to keep in touch. The contact card sits
+ * last because it is the thing a thumb should land on, and it holds its weight
+ * by being the only filled element rather than by being first.
  *
  * Three tiers, because messaging is worth its own button rather than a cell in
  * a grid: the contact card, then WhatsApp, then the three places to read. The
@@ -62,6 +63,14 @@ const STORY_URL = '/story';
 
     </div>
 
+    <nav class="hi__more">
+      <a href="/work" data-ev="hi_action" data-ev-channel="work">My work</a>
+      <a href={STORY_URL} data-ev="hi_action" data-ev-channel="story">My story</a>
+      <a href={contact.linkedin} rel="me" data-ev="hi_action" data-ev-channel="linkedin">
+        LinkedIn
+      </a>
+    </nav>
+
     <!--
       No `download` attribute. Left alone, a phone hands a text/vcard response
       to the contacts app; `download` sends it to the file system instead, which
@@ -76,13 +85,6 @@ const STORY_URL = '/story';
       {copy.whatsapp}
     </a>
 
-    <nav class="hi__more">
-      <a href="/work" data-ev="hi_action" data-ev-channel="work">My work</a>
-      <a href={STORY_URL} data-ev="hi_action" data-ev-channel="story">My story</a>
-      <a href={contact.linkedin} rel="me" data-ev="hi_action" data-ev-channel="linkedin">
-        LinkedIn
-      </a>
-    </nav>
   </main>
 </Story>
 
@@ -299,6 +301,7 @@ const STORY_URL = '/story';
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-2xs);
+    margin-bottom: var(--space-xs);
   }
 
   .hi__more a {
@@ -306,12 +309,12 @@ const STORY_URL = '/story';
     align-items: center;
     justify-content: center;
     min-height: 56px;
-    border: 1px solid var(--line);
+    /* Brighter than the ground they sit on, so they read as three places to go
+       rather than as small print under the actions. */
+    border: 1px solid #2c3643;
     background: var(--ground-raise);
     color: var(--ink);
-    /* Three across on a 390px screen: the smaller size keeps every label on
-       one line without shrinking the target. */
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     text-decoration: none;
   }
 
