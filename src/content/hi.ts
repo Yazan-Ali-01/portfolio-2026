@@ -90,15 +90,15 @@ export const whatsappHref = `https://wa.me/${CONTACT.phone}?text=${encodeURIComp
 export const copy = AVAILABLE
   ? {
       status: 'Open to senior roles',
-      where: 'Remote or on-site in Dubai',
+      where: 'Remote (anywhere) or on-site in Dubai',
       primary: 'Save my contact',
-      primaryNote: 'Phone, email and LinkedIn, straight into your phone',
+      primaryNote: 'Phone, email and LinkedIn',
       whatsapp: 'WhatsApp me',
     }
   : {
       status: 'Not looking right now',
-      where: 'Remote or on-site in Dubai',
+      where: 'Remote (anywhere) or on-site in Dubai',
       primary: 'Save my contact',
-      primaryNote: 'Keep it for whenever you need a backend engineer',
+      primaryNote: 'Phone, email and LinkedIn',
       whatsapp: 'Say hello on WhatsApp',
     };
