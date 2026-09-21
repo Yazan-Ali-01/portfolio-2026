@@ -2,10 +2,18 @@
 import { defineConfig, fontProviders } from 'astro/config';
 import preact from '@astrojs/preact';
 import sitemap from '@astrojs/sitemap';
+import vercel from '@astrojs/vercel';
 
 // Preact exists solely to host the three.js island (E03). Nothing else hydrates.
 export default defineConfig({
   site: 'https://www.yazan-ali.net',
+  /*
+   * Every page in this site is still built to static HTML. The adapter is here
+   * only so the handful of routes that mark themselves `prerender = false` —
+   * the /hi counter and wall — can run as functions. Nothing else changes: the
+   * gate, the story and /work are the same files on the CDN they always were.
+   */
+  adapter: vercel(),
   /*
    * The gate is a decision, and the decision leads somewhere heavy: /work boots
    * three.js. Fetching on hover means the page is usually already in cache by
@@ -19,9 +27,10 @@ export default defineConfig({
   integrations: [
     preact(),
     sitemap({
-      // /og/* exists only to be screenshotted, and /hi is a QR destination
-      // rather than a page anyone should reach through search.
-      filter: (page) => !page.includes('/og') && !page.endsWith('/hi/'),
+      // /og/* exists only to be screenshotted, and everything under /hi is a
+      // QR destination rather than a page anyone should reach through search —
+      // which includes /hi/admin, the one page that must never be listed.
+      filter: (page) => !page.includes('/og') && !/\/hi(\/|$)/.test(new URL(page).pathname),
     }),
   ],
   vite: {

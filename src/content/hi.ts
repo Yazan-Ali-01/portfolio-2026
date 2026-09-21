@@ -102,3 +102,27 @@ export const copy = AVAILABLE
       primaryNote: 'Phone, email and LinkedIn',
       whatsapp: 'Say hello on WhatsApp',
     };
+
+/**
+ * The wall.
+ *
+ * A second reason to open this page: how many people have scanned the shirt,
+ * and what they said. Kept out of `copy` above because none of it changes with
+ * AVAILABLE — the wall reads the same whether or not I am looking for work.
+ *
+ * The line about areas is not decoration. Where a scan came from is counted per
+ * district and never per person, and a page that records anything about someone
+ * should say so on the page rather than in a policy nobody opens.
+ */
+export const wall = {
+  /** Shipped in the HTML. The counter replaces it once the number arrives. */
+  fallback: 'You scanned the shirt.',
+  title: 'The wall',
+  blurb: 'One line each, from people who scanned this shirt.',
+  placeholder: 'Say one thing',
+  namePlaceholder: 'First name (optional)',
+  submit: 'Put it up',
+  mine: 'Your line is up.',
+  unsay: 'Take it down',
+  privacy: 'Lines are public. Scans are counted by area, never by person.',
+} as const;

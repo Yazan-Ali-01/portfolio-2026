@@ -1,0 +1,238 @@
+---
+import { keyMatches } from '../../lib/hi-admin';
+import { areas, scanCount, storeReady, wall } from '../../lib/hi-store';
+import { ANON, ordinal } from '../../lib/hi-text';
+import '../../styles/base.css';
+
+export const prerender = false;
+
+/**
+ * The wall, from the other side.
+ *
+ * Reached with ?key=<HI_ADMIN_KEY> and nothing else. A wrong key or no key
+ * renders the same 404 a missing page would, so this URL does not confirm that
+ * it exists to anyone guessing at it.
+ *
+ * Plain server-rendered HTML and one fetch per delete. No framework, because
+ * this page is for one person holding a phone at a bad moment.
+ */
+const key = Astro.url.searchParams.get('key');
+const allowed = storeReady() && keyMatches(key);
+
+if (!allowed) {
+  Astro.response.status = 404;
+}
+
+const [lines, count, where] = allowed
+  ? await Promise.all([wall(), scanCount(), areas()])
+  : [[], 0, []];
+
+const when = (at: number) =>
+  new Date(at).toLocaleString('en-GB', {
+    timeZone: 'Asia/Dubai',
+    day: '2-digit',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+---
+
+<html lang="en" data-world="hi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {/* The key is in the URL, so it must not ride along to anywhere else. */}
+    <meta name="referrer" content="no-referrer" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>{allowed ? 'Wall — moderation' : 'Not found'}</title>
+  </head>
+  <body>
+    {
+      !allowed ? (
+        <main class="gone">
+          <p>Not found.</p>
+        </main>
+      ) : (
+        <main class="mod">
+          <header class="mod__head">
+            <h1>The wall</h1>
+            <p>
+              {count} {count === 1 ? 'person has' : 'people have'} scanned · {lines.length}{' '}
+              {lines.length === 1 ? 'line' : 'lines'} up
+            </p>
+          </header>
+
+          {lines.length === 0 && <p class="mod__empty">Nothing on the wall yet.</p>}
+
+          <ul class="mod__list">
+            {lines.map((line) => (
+              <li class="mod__line" data-id={line.id}>
+                <div class="mod__meta">
+                  <span class="mod__n">{line.n ? ordinal(line.n) : '—'}</span>
+                  <span class="mod__name">{line.name || ANON}</span>
+                  <time datetime={new Date(line.at).toISOString()}>{when(line.at)}</time>
+                </div>
+                <p class="mod__text">{line.text}</p>
+                <button type="button" data-kill={line.id}>Take it down</button>
+              </li>
+            ))}
+          </ul>
+
+          {/*
+            Aggregate counts, which is all that is ever recorded about where a
+            scan came from. Shown here so the numbers behind any future map are
+            inspectable rather than taken on trust.
+          */}
+          <section class="mod__where">
+            <h2>Where, by area</h2>
+            {where.length === 0 ? (
+              <p class="mod__empty">No scans counted yet.</p>
+            ) : (
+              <ul>
+                {where.map((area) => (
+                  <li>
+                    <span>{[area.city, area.region, area.country].filter(Boolean).join(', ')}</span>
+                    <span>{area.scans}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </main>
+      )
+    }
+
+    {
+      allowed && (
+        <script is:inline define:vars={{ key }}>
+          document.addEventListener('click', async (event) => {
+            const button = event.target.closest('button[data-kill]');
+            if (!button) return;
+
+            const id = button.dataset.kill;
+            button.disabled = true;
+            button.textContent = 'Removing…';
+
+            try {
+              const response = await fetch(
+                `/api/hi/admin?key=${encodeURIComponent(key)}&id=${encodeURIComponent(id)}`,
+                { method: 'DELETE' },
+              );
+              if (!response.ok) throw new Error(String(response.status));
+              document.querySelector(`[data-id="${id}"]`)?.remove();
+            } catch {
+              button.disabled = false;
+              button.textContent = 'Failed — try again';
+            }
+          });
+        </script>
+      )
+    }
+  </body>
+</html>
+
+<style>
+  .gone,
+  .mod {
+    max-width: 38rem;
+    margin-inline: auto;
+    padding: var(--space-md) var(--space-sm) var(--space-xl);
+  }
+
+  .mod__head h1 {
+    margin: 0;
+    font-size: var(--text-lg);
+  }
+
+  .mod__head p,
+  .mod__empty {
+    margin: var(--space-2xs) 0 0;
+    font-size: var(--text-xs);
+    color: var(--ink-muted);
+  }
+
+  .mod__list {
+    list-style: none;
+    margin: var(--space-md) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-xs);
+  }
+
+  .mod__line {
+    padding: var(--space-xs);
+    border: 1px solid var(--line);
+    background: var(--ground-raise);
+  }
+
+  .mod__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75em;
+    font-size: var(--text-xs);
+    color: var(--ink-muted);
+  }
+
+  .mod__n {
+    color: var(--accent);
+  }
+
+  .mod__name {
+    color: var(--ink);
+  }
+
+  .mod__text {
+    margin: var(--space-2xs) 0 var(--space-xs);
+    font-size: var(--text-sm);
+    color: var(--ink);
+    /* A line from a stranger can be one unbroken 140-character word. */
+    overflow-wrap: anywhere;
+  }
+
+  .mod__line button {
+    min-height: 40px;
+    padding-inline: var(--space-xs);
+    border: 1px solid #5b2626;
+    background: none;
+    color: #e2857f;
+    font: inherit;
+    font-size: var(--text-xs);
+    cursor: pointer;
+  }
+
+  .mod__line button:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .mod__where {
+    margin-top: var(--space-lg);
+  }
+
+  .mod__where h2 {
+    margin: 0 0 var(--space-xs);
+    font-size: var(--text-sm);
+    color: var(--ink-muted);
+    font-weight: 400;
+  }
+
+  .mod__where ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.35em;
+    font-size: var(--text-xs);
+  }
+
+  .mod__where li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    color: var(--ink-muted);
+  }
+
+  .mod__where li span:last-child {
+    color: var(--accent);
+  }
+</style>

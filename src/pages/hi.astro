@@ -1,8 +1,9 @@
 ---
 import Story from '../layouts/Story.astro';
-import { contact, copy, whatsappHref } from '../content/hi';
+import { contact, copy, wall, whatsappHref } from '../content/hi';
 import { stack, stackNames } from '../content/stack';
 import { meta } from '../content/meta';
+import { MAX_MESSAGE, MAX_NAME } from '../lib/hi-text';
 
 /**
  * The shirt page. A stranger, on a phone, one-handed, fifteen seconds.
@@ -15,6 +16,13 @@ import { meta } from '../content/meta';
  * Three tiers, because messaging is worth its own button rather than a cell in
  * a grid: the contact card, then WhatsApp, then the three places to read. The
  * three sit in one row so the whole set stays inside a thumb's arc.
+ *
+ * Below all of that, off the first screen, is the wall. It is the reason to
+ * open this page a second time, and it is deliberately not in the way of the
+ * reason to open it the first time: the block above is untouched, still one
+ * screen, still ending with a thumb on the contact card. The wall is reached by
+ * scrolling, and the only thing that reaches up into the first screen is the
+ * one line at the top that turns into a number.
  */
 const STORY_URL = '/story';
 ---
@@ -24,8 +32,15 @@ const STORY_URL = '/story';
   title={`${meta.name} — ${contact.title}`}
   description="You scanned the shirt. Save my contact, or come see the work."
 >
-  <main class="hi">
-    <p class="hi__from">You scanned the shirt.</p>
+  <main>
+   <div class="hi">
+    {/*
+      Ships as "You scanned the shirt." and stays that way for a reader with no
+      JavaScript, a blocked request or a cold endpoint. When the number does
+      arrive it replaces the sentence in place, which is why the fallback is a
+      full sentence rather than a label waiting to be filled in.
+    */}
+    <p class="hi__from"><span data-scan-line>{wall.fallback}</span></p>
 
     <div class="hi__id">
       <h1 class="hi__name">{meta.name}</h1>
@@ -85,8 +100,79 @@ const STORY_URL = '/story';
       {copy.whatsapp}
     </a>
 
+    {/*
+      The only hint that there is anything below the fold, and silent until the
+      count comes back above zero — an empty wall should not advertise itself on
+      the one screen that has a job to do.
+
+      Hidden with visibility rather than the `hidden` attribute, so it holds its
+      line in the layout from first paint. Revealing it any other way moves the
+      contact card several pixels up under the reader's thumb, a second after
+      they have already aimed at it.
+    */}
+    <a class="hi__jump" href="#wall" data-wall-jump data-ev="hi_action" data-ev-channel="wall"></a>
+   </div>
+
+   {/*
+     Hidden in the markup and revealed only once the endpoint has answered.
+     Failure therefore looks like the page always did rather than like a broken
+     section, which matters more here than on any other page on the site.
+   */}
+   <section class="wall" id="wall" aria-labelledby="wall-title" hidden data-wall-root>
+     <h2 class="wall__title" id="wall-title">{wall.title}</h2>
+     <p class="wall__blurb">{wall.blurb}</p>
+     <p class="wall__tally" data-wall-tally></p>
+
+     <form class="say" data-say>
+       <label class="u-visually-hidden" for="say-name">{wall.namePlaceholder}</label>
+       <input
+         class="say__name"
+         id="say-name"
+         name="name"
+         type="text"
+         maxlength={MAX_NAME}
+         autocomplete="given-name"
+         placeholder={wall.namePlaceholder}
+         data-say-name
+       />
+
+       <label class="u-visually-hidden" for="say-text">{wall.placeholder}</label>
+       <textarea
+         class="say__text"
+         id="say-text"
+         name="text"
+         rows="2"
+         maxlength={MAX_MESSAGE}
+         required
+         placeholder={wall.placeholder}
+         data-say-text></textarea>
+
+       <div class="say__foot">
+         {/* Counts down rather than up: what is left is the useful number. */}
+         <span class="say__left" data-say-left aria-hidden="true">{MAX_MESSAGE}</span>
+         <button class="say__go" type="submit" data-say-submit>{wall.submit}</button>
+       </div>
+
+       <p class="say__error" role="alert" hidden data-say-error></p>
+     </form>
+
+     <div class="say__mine" hidden data-mine>
+       <p class="say__minehead">{wall.mine}</p>
+       <p class="say__minetext" data-mine-text></p>
+       <button class="say__unsay" type="button" data-unsay>{wall.unsay}</button>
+     </div>
+
+     <ul class="wall__list" data-wall-list></ul>
+
+     <p class="wall__privacy">{wall.privacy}</p>
+   </section>
   </main>
 </Story>
+
+<script>
+  import { initHiWall } from '../scripts/hi-wall';
+  initHiWall();
+</script>
 
 <style>
   /*
@@ -107,6 +193,57 @@ const STORY_URL = '/story';
     margin: 0;
     font-size: var(--text-xs);
     color: var(--accent);
+    /*
+     * Two lines' worth of room, reserved from the start. "You scanned the
+     * shirt." is one line and the number sentence can be two on a narrow
+     * phone, and without this the whole first screen jumps when the count
+     * lands — on the page whose entire job is to be steady for fifteen
+     * seconds.
+     */
+    min-height: 2.6em;
+  }
+
+  /*
+   * The number. Larger and heavier than the sentence carrying it, because this
+   * is the part someone screenshots, and tabular figures so it does not shift
+   * as it climbs past a digit.
+   *
+   * :global, and every rule below that styles a wall line likewise. Astro
+   * scopes a stylesheet by stamping an attribute on the elements it can see in
+   * this file, and these elements are built by the script at runtime, so they
+   * are never stamped and the rules would simply not apply. Nesting each one
+   * under a selector that IS in the markup keeps the escape hatch narrow: the
+   * global part cannot match anything outside this page's own containers.
+   */
+  .hi__from :global(.hi__n) {
+    font-size: 1.35em;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  /*
+   * The one thing pointing below the fold. Quiet by design: it must not compete
+   * with the contact card two inches below it.
+   *
+   * The reserved line is the point. Its height is spoken for before anyone has
+   * counted anything, so the moment the tally lands nothing on this screen
+   * moves. visibility, not display, is what buys that — and it also takes the
+   * empty link out of the tab order and off a screen reader until it says
+   * something.
+   */
+  .hi__jump {
+    margin-top: calc(var(--space-sm) * -0.5);
+    min-height: 1.4em;
+    font-size: var(--text-xs);
+    color: var(--ink-muted);
+    text-align: center;
+    text-decoration: none;
+    visibility: hidden;
+  }
+
+  .hi__jump[data-shown] {
+    visibility: visible;
   }
 
   /*
@@ -332,5 +469,205 @@ const STORY_URL = '/story';
       border-color: var(--accent);
       color: var(--accent);
     }
+  }
+
+  /* --- the wall ----------------------------------------------------------
+     A second screen with a different job: read, then maybe write. It borrows
+     the first screen's column so the two read as one page, and nothing here
+     is filled or accented except the button, because the accent belongs to the
+     contact card above.
+     --------------------------------------------------------------------- */
+  .wall {
+    max-width: 30rem;
+    margin-inline: auto;
+    padding: var(--space-lg) clamp(1.5rem, 6vw, 2.5rem) var(--space-xl);
+    border-top: 1px solid var(--line);
+  }
+
+  .wall[hidden] {
+    display: none;
+  }
+
+  .wall__title {
+    margin: 0;
+    font-size: var(--text-lg);
+  }
+
+  .wall__blurb {
+    margin: var(--space-2xs) 0 0;
+    font-size: var(--text-xs);
+    color: var(--ink-muted);
+  }
+
+  .wall__tally {
+    margin: var(--space-2xs) 0 0;
+    font-size: var(--text-xs);
+    color: var(--accent);
+  }
+
+  .say {
+    display: grid;
+    gap: var(--space-2xs);
+    margin-top: var(--space-sm);
+  }
+
+  /*
+   * 16px exactly. Anything smaller and iOS zooms the page on focus, which on a
+   * one-screen layout means the reader is dumped somewhere they did not ask to
+   * be with no obvious way back.
+   */
+  .say__name,
+  .say__text {
+    width: 100%;
+    padding: var(--space-xs);
+    border: 1px solid var(--line);
+    background: var(--ground-raise);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 16px;
+  }
+
+  .say__text {
+    resize: vertical;
+    min-height: 3.5em;
+  }
+
+  .say__name::placeholder,
+  .say__text::placeholder {
+    color: var(--ink-faint);
+    opacity: 0.6;
+  }
+
+  .say__name:focus-visible,
+  .say__text:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+  }
+
+  .say__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-xs);
+  }
+
+  .say__left {
+    font-size: var(--text-xs);
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .say__go {
+    min-height: 44px;
+    padding-inline: var(--space-sm);
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #0e1116;
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .say__go:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  .say__error {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: #e2857f;
+  }
+
+  .say__error[hidden],
+  .say__mine[hidden] {
+    display: none;
+  }
+
+  /* Replaces the form once you have had your turn. */
+  .say__mine {
+    margin-top: var(--space-sm);
+    padding: var(--space-xs);
+    border: 1px solid var(--line);
+    background: var(--ground-raise);
+  }
+
+  .say__minehead {
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--accent);
+  }
+
+  .say__minetext {
+    margin: var(--space-2xs) 0 var(--space-xs);
+    font-size: var(--text-sm);
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+
+  .say__unsay {
+    min-height: 40px;
+    padding-inline: var(--space-xs);
+    border: 1px solid var(--line);
+    background: none;
+    color: var(--ink-muted);
+    font-family: inherit;
+    font-size: var(--text-xs);
+    cursor: pointer;
+  }
+
+  .wall__list {
+    list-style: none;
+    margin: var(--space-md) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-sm);
+  }
+
+  .wall__list :global(.wall__line) {
+    padding-left: var(--space-xs);
+    border-left: 1px solid var(--line);
+  }
+
+  /* Your own line, marked so you can find it in a long wall. */
+  .wall__list :global(.wall__line[data-own]) {
+    border-left-color: var(--accent);
+  }
+
+  .wall__list :global(.wall__meta) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.75em;
+    margin: 0;
+    font-size: var(--text-xs);
+    color: var(--ink-faint);
+  }
+
+  .wall__list :global(.wall__who) {
+    color: var(--ink-muted);
+  }
+
+  .wall__list :global(.wall__n) {
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wall__list :global(.wall__said) {
+    margin: 0.25em 0 0;
+    font-size: var(--text-sm);
+    color: var(--ink);
+    /*
+     * A stranger can type 140 characters without a space in them, and on a
+     * 320px phone that would push the whole page sideways.
+     */
+    overflow-wrap: anywhere;
+  }
+
+  .wall__privacy {
+    margin: var(--space-lg) 0 0;
+    font-size: var(--text-xs);
+    color: var(--ink-faint);
   }
 </style>
