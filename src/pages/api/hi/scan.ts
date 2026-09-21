@@ -30,11 +30,22 @@ export const POST: APIRoute = async (context) => {
     /* no body is simply "don't count me" */
   }
 
+  /*
+   * A visitor id is issued to everyone who asks, and it is deliberately not the
+   * same decision as whether to count them.
+   *
+   * These were once one decision, and it locked people out of the wall: anyone
+   * carrying the analytics opt-out — which is to say me, and anyone who has
+   * ever loaded a page with ?analytics=off — got no cookie, and without a
+   * cookie /api/hi/say has nobody to attribute a line to. Opting out of being
+   * counted is not opting out of being able to say something.
+   *
+   * The id carries no tracking weight to make this a bad trade: it is random,
+   * HttpOnly, and the only thing it maps to is "this is your line, you may take
+   * it down". Nothing about a person is inferred from it.
+   */
   const existing = visitorId(context);
-  /* Held in a local rather than read back off the cookie jar, because the id
-     issued below belongs to the response and re-reading the request for it is
-     a bug waiting for the day that behaviour changes. */
-  let visitor = existing;
+  const visitor = existing ?? issueVisitor(context);
 
   /*
    * A returning visitor keeps whatever number they were given, and it costs a
@@ -43,31 +54,30 @@ export const POST: APIRoute = async (context) => {
    */
   let n = existing ? await ordinalFor(existing) : null;
 
+  /* Counting is the part the browser gets a say in, and the only part. */
   if (n === null && join) {
-    if (!(await withinLimit('scan', clientIp(context.request), 20, 3600))) {
-      /*
-       * Out of new numbers for this address this hour. The wall still loads —
-       * a shared office IP hitting the ceiling should not look like an outage.
-       */
-      const [count, lines] = await Promise.all([scanCount(), wall()]);
-      return json({ n: null, count, wall: lines, mine: null });
-    }
-
-    visitor = existing ?? issueVisitor(context);
-    n = await claimOrdinal(visitor);
-
     /*
-     * Counted once, against the area, at the moment a new person arrives — never
-     * for a returning one, so this measures people rather than page loads. It is
-     * written to a different key space than the wall and shares no id with it.
+     * Past the ceiling, the wall still loads and a cookie has already been
+     * issued above — a shared office IP running out of new numbers must not
+     * also lose the ability to leave a line.
      */
-    await countArea(placeOf(context.request));
+    if (await withinLimit('scan', clientIp(context.request), 20, 3600)) {
+      n = await claimOrdinal(visitor);
+
+      /*
+       * Counted once, against the area, at the moment a new person arrives —
+       * never for a returning one, so this measures people rather than page
+       * loads. It is written to a different key space than the wall and shares
+       * no id with it.
+       */
+      await countArea(placeOf(context.request));
+    }
   }
 
   const [count, lines, mine] = await Promise.all([
     scanCount(),
     wall(),
-    visitor ? lineBy(visitor) : Promise.resolve(null),
+    lineBy(visitor),
   ]);
 
   return json({ n, count, wall: lines, mine });
