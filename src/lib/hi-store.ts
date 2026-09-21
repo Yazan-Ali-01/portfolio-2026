@@ -21,6 +21,33 @@ import { WALL_SIZE, type WallLine } from './hi-text';
        leak, be subpoenaed, or be joined back to the wall.
    --------------------------------------------------------------------------- */
 
+/**
+ * The people who scanned before there was anything counting them.
+ *
+ * /hi went up on 17 Sep 2026 and this counter four days later, so there is a
+ * short history the page would otherwise throw away. Starting at 1 would tell
+ * the next person they were the first, which is both untrue and the least
+ * impressive thing the page could say.
+ *
+ * 104 is Vercel Analytics' visitor count for the /hi route, and it is the
+ * all-time figure rather than a window: the route is younger than the shortest
+ * range the dashboard offers, so its seven-day number already covers its whole
+ * life. The site-wide 233 over thirty days is a different and wrong number for
+ * this — it counts /work and /story readers who never saw a shirt, across days
+ * when this page did not exist.
+ *
+ * Read it as a floor, not a census. Vercel counts a visitor once per day, so
+ * someone who came back on two days is two of these, and a few early ones are
+ * me before there was an opt-out.
+ *
+ * Changing it later moves only people who have not been given a number yet.
+ * Everyone already counted keeps theirs, because the offset is added when the
+ * number is handed out and then stored — see claimOrdinal. That is deliberate:
+ * a number someone has already screenshotted must never quietly become a
+ * different one.
+ */
+const SCANS_BEFORE_THE_COUNTER = 104;
+
 const KEY = {
   /** How many people have scanned. The number a visitor gets is their INCR of this. */
   count: 'hi:n',
@@ -117,7 +144,7 @@ export async function ordinalFor(vid: string): Promise<number | null> {
  * number, which they would both screenshot.
  */
 export async function claimOrdinal(vid: string): Promise<number> {
-  const n = await redis().incr(KEY.count);
+  const n = SCANS_BEFORE_THE_COUNTER + (await redis().incr(KEY.count));
   await redis().set(KEY.who(vid), n);
   return n;
 }
@@ -125,7 +152,7 @@ export async function claimOrdinal(vid: string): Promise<number> {
 /** How many people have scanned, for the wall header. Never increments. */
 export async function scanCount(): Promise<number> {
   const n = await redis().get<number | string>(KEY.count);
-  return Number(n ?? 0) || 0;
+  return SCANS_BEFORE_THE_COUNTER + (Number(n ?? 0) || 0);
 }
 
 /* --- where, loosely ------------------------------------------------------- */
