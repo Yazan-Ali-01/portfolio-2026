@@ -12,6 +12,8 @@ interface Props {
   image?: string;
   /** Alt text for that card. */
   imageAlt?: string;
+  /** Keep this page out of search results. */
+  noindex?: boolean;
 }
 
 const {
@@ -20,6 +22,7 @@ const {
   world = 'gate',
   image = meta.ogImage,
   imageAlt,
+  noindex = false,
 } = Astro.props;
 
 const canonical = new URL(Astro.url.pathname, meta.siteUrl).href;
@@ -56,6 +59,7 @@ const personSchema = {
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
     <link rel="canonical" href={canonical} />
     <meta name="generator" content={Astro.generator} />
 

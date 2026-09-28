@@ -37,6 +37,9 @@ const { from } = Astro.props;
   >
 
   <p class="close__links">
+    <a href="/ask" data-ev="contact_click" data-ev-channel="ask" data-ev-from={from}>
+      Ask about him
+    </a>
     <a href={meta.linkedin} rel="me" data-ev="contact_click" data-ev-channel="linkedin" data-ev-from={from}>
       LinkedIn
     </a>

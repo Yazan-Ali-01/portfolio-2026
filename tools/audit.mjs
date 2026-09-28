@@ -323,7 +323,16 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
     ground: getComputedStyle(document.body).backgroundColor,
     face: getComputedStyle(document.querySelector('.hi__name')).fontFamily,
   }));
-  ok(!box.scrolls, 'nothing is below the fold at 390x844');
+  /*
+   * The page scrolls now: the wall lives below the fold on purpose. What still
+   * has to hold is that every action is reachable without scrolling to it.
+   */
+  const actionsAbove = await page.evaluate(() =>
+    [...document.querySelectorAll('.hi__more a, .hi__save, .hi__wa')].every(
+      (el) => el.getBoundingClientRect().bottom <= innerHeight,
+    ),
+  );
+  ok(actionsAbove, 'every action is above the fold at 390x844');
   ok(box.x === 0, `no sideways overflow (${box.x}px)`);
   ok(box.ground === 'rgb(14, 17, 22)', `the shirt's ground colour (${box.ground})`);
   ok(/plex mono/i.test(box.face), 'IBM Plex Mono is the face');
@@ -373,20 +382,23 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
   ok(/TypeScript/.test(stack.label) && /Docker/.test(stack.label), 'and reads as one sentence for a screen reader');
   ok(stack.hidden, 'with the layer rows hidden from it');
 
-  ok(actions.length === 5, `five actions and nothing else (${actions.length})`);
+  ok(actions.length === 6, `six actions and nothing else (${actions.length})`);
 
   /*
    * The three places to read come first and the two ways to make contact come
    * last, nearest the thumb. The card holds its weight by being the only
    * filled element, not by being first.
    */
-  const reads = actions.slice(0, 3).map((a) => a.label).join(', ');
-  ok(reads === 'My work, My story, LinkedIn', `the places to read lead, in order (${reads})`);
-  ok(actions[4].label.includes('WhatsApp'), `WhatsApp is last (${actions[4].label})`);
+  const reads = actions.slice(0, 4).map((a) => a.label).join(', ');
+  ok(
+    reads === 'My work, My story, Ask about me, LinkedIn',
+    `the places to read lead, in order (${reads})`,
+  );
+  ok(actions[5].label.includes('WhatsApp'), `WhatsApp is last (${actions[5].label})`);
   ok(actions.every((a) => a.h >= 44), `every target clears 44px (smallest ${Math.min(...actions.map((a) => a.h))}px)`);
   ok(actions.every((a) => a.bottom <= 844), 'every target is inside the viewport');
 
-  ok(actions[3].href === '/hi.vcf', `the contact card sits above WhatsApp (${actions[3].href})`);
+  ok(actions[4].href === '/hi.vcf', `the contact card sits above WhatsApp (${actions[4].href})`);
 
   const wa = actions.find((a) => a.href.includes('wa.me')).href;
   ok(/^https:\/\/wa\.me\/971528556635\?text=/.test(wa), `wa.me deep link, digits only (${wa.split('?')[0]})`);

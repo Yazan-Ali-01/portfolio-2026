@@ -81,6 +81,7 @@ const STORY_URL = '/story';
     <nav class="hi__more">
       <a href="/work" data-ev="hi_action" data-ev-channel="work">My work</a>
       <a href={STORY_URL} data-ev="hi_action" data-ev-channel="story">My story</a>
+      <a href="/ask" data-ev="hi_action" data-ev-channel="ask">Ask about me</a>
       <a href={contact.linkedin} rel="me" data-ev="hi_action" data-ev-channel="linkedin">
         LinkedIn
       </a>
@@ -234,7 +235,9 @@ const STORY_URL = '/story';
    */
   .hi__jump {
     margin-top: calc(var(--space-sm) * -0.5);
-    min-height: 1.4em;
+    /* A standalone link, so it carries a target rather than just a line. */
+    min-height: 24px;
+    padding-block: 0.2rem;
     font-size: var(--text-xs);
     color: var(--ink-muted);
     text-align: center;
@@ -436,7 +439,7 @@ const STORY_URL = '/story';
 
   .hi__more {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-2xs);
     margin-bottom: var(--space-xs);
   }

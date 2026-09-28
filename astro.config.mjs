@@ -30,7 +30,9 @@ export default defineConfig({
       // /og/* exists only to be screenshotted, and everything under /hi is a
       // QR destination rather than a page anyone should reach through search —
       // which includes /hi/admin, the one page that must never be listed.
-      filter: (page) => !page.includes('/og') && !/\/hi(\/|$)/.test(new URL(page).pathname),
+      filter: (page) =>
+        !page.includes('/og') &&
+        !/\/(hi|ask)(\/|$)/.test(new URL(page).pathname),
     }),
   ],
   vite: {

@@ -57,6 +57,15 @@ import { projects } from '../content/projects';
         <span class="door__cue">Pull up a chair</span>
       </a>
     </div>
+
+    {/*
+      Deliberately not a third door. The gate already splits the traffic once;
+      splitting it again would cost more than this is worth. A line under the
+      two doors is enough for anyone who wants it.
+    */}
+    <p class="gate__aside u-shell--story">
+      Or <a href="/ask">ask about him</a> and get answers with sources.
+    </p>
   </main>
 </Story>
 
@@ -64,7 +73,28 @@ import { projects } from '../content/projects';
   .gate {
     min-height: 100svh;
     display: grid;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .gate__aside {
+    margin: 0;
+    padding-block: var(--space-sm);
+    border-top: 1px solid var(--line);
+    font-family: var(--face-meta);
+    font-size: var(--text-xs);
+    color: var(--ink-muted);
+    max-width: none;
+  }
+
+  .gate__aside a {
+    /* Inline in a sentence, but still a real destination: give it a target. */
+    display: inline-block;
+    padding-block: 0.35rem;
+    color: var(--ink);
+  }
+
+  .gate__aside a:hover {
+    color: var(--accent);
   }
 
   .gate__top {

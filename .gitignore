@@ -30,3 +30,7 @@ shots/
 test-results/
 .vercel
 .env*
+
+# Working source for the /ask corpus and the CV variants. Not committed:
+# the repo is public and this carries a phone number and full history.
+docs/source/cv.md
