@@ -36,10 +36,28 @@ const { from } = Astro.props;
     data-ev-from={from}>{meta.email}</a
   >
 
+  {/*
+    A question box, not a link. Someone who has just read a case study has a
+    question in their head; a link asks them to hold it while they navigate,
+    and this one takes it straight there. Plain GET, so it works with no
+    JavaScript and the resulting URL is shareable.
+  */}
+  <form class="close__ask" action="/ask" method="get">
+    <label class="u-skip" for={`ask-${from}`}>Ask a question about Yazan</label>
+    <input
+      id={`ask-${from}`}
+      class="close__askinput"
+      name="q"
+      placeholder="Ask anything about his work"
+      autocomplete="off"
+      maxlength="200"
+    />
+    <button class="close__askgo" type="submit" data-ev="contact_click" data-ev-channel="ask" data-ev-from={from}>
+      Ask
+    </button>
+  </form>
+
   <p class="close__links">
-    <a href="/ask" data-ev="contact_click" data-ev-channel="ask" data-ev-from={from}>
-      Ask about him
-    </a>
     <a href={meta.linkedin} rel="me" data-ev="contact_click" data-ev-channel="linkedin" data-ev-from={from}>
       LinkedIn
     </a>
@@ -86,6 +104,57 @@ const { from } = Astro.props;
 
   .close__mail:hover {
     color: var(--accent);
+  }
+
+  /* Matches the field on /ask, so arriving there feels like the same object. */
+  .close__ask {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    max-width: 30rem;
+    margin-bottom: var(--space-md);
+    padding: 0 var(--space-xs) 0 var(--space-sm);
+    background: var(--ground-raise);
+    border: 1px solid #2f2f36;
+    transition: border-color 0.15s ease;
+  }
+
+  .close__ask:hover {
+    border-color: #3d3d46;
+  }
+
+  .close__ask:focus-within {
+    border-color: var(--accent);
+  }
+
+  .close__askinput {
+    flex: 1;
+    min-height: 52px;
+    background: transparent;
+    border: 0;
+    color: var(--ink);
+    font-family: inherit;
+    font-size: var(--text-base);
+  }
+
+  .close__askinput::placeholder {
+    color: var(--ink-faint);
+  }
+
+  .close__askinput:focus-visible {
+    outline: none;
+  }
+
+  .close__askgo {
+    min-height: 40px;
+    padding: 0 var(--space-sm);
+    background: var(--accent);
+    border: 0;
+    color: var(--ground);
+    font-family: var(--face-meta);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    cursor: pointer;
   }
 
   .close__links {

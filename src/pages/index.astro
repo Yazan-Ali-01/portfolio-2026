@@ -64,7 +64,11 @@ import { projects } from '../content/projects';
       two doors is enough for anyone who wants it.
     */}
     <p class="gate__aside u-shell--story">
-      Or <a href="/ask">ask about him</a> and get answers with sources.
+      <a href="/ask">
+        <span class="gate__dot" aria-hidden="true"></span>
+        Ask about him
+      </a>
+      <span class="gate__asidesay">and get answers with sources, from a fixed record</span>
     </p>
   </main>
 </Story>
@@ -86,11 +90,49 @@ import { projects } from '../content/projects';
     max-width: none;
   }
 
+  .gate__aside {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2xs) var(--space-xs);
+  }
+
   .gate__aside a {
-    /* Inline in a sentence, but still a real destination: give it a target. */
-    display: inline-block;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5em;
     padding-block: 0.35rem;
     color: var(--ink);
+    text-decoration: none;
+  }
+
+  /* The same dot the nav carries, so the two read as the same thing. */
+  .gate__dot {
+    width: 0.44em;
+    height: 0.44em;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes gate-ping {
+      0%,
+      70%,
+      100% {
+        opacity: 1;
+      }
+      85% {
+        opacity: 0.25;
+      }
+    }
+
+    .gate__dot {
+      animation: gate-ping 3.5s ease-in-out infinite;
+    }
+  }
+
+  .gate__asidesay {
+    color: var(--ink-faint);
   }
 
   .gate__aside a:hover {

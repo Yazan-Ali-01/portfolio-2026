@@ -211,6 +211,30 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
 
   await page.goto(BASE + '/story', { waitUntil: 'domcontentloaded' });
   ok(await page.locator('a[href^="mailto:"]').count() >= 1, '/story still closes with an address');
+
+  /*
+   * /ask has to be reachable without hunting for it. It sits in the nav on
+   * every page that has one, on the gate, and as a question box at the foot
+   * of the work world, where a reader has just finished and has one.
+   */
+  for (const route of ['/story', '/work', '/work/driven']) {
+    await page.goto(BASE + route, { waitUntil: 'domcontentloaded' });
+    ok(
+      (await page.locator('nav.worlds a[href="/ask"]').count()) === 1,
+      `${route} carries Ask in the nav`,
+    );
+  }
+
+  await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
+  ok((await page.locator('a[href="/ask"]').count()) >= 1, 'the gate links to it too');
+
+  await page.goto(BASE + '/work/driven', { waitUntil: 'domcontentloaded' });
+  const box = page.locator('form[action="/ask"] input[name="q"]');
+  ok((await box.count()) === 1, 'a case study ends with a question box');
+  ok(
+    (await page.locator('form[action="/ask"]').getAttribute('method'))?.toLowerCase() === 'get',
+    'and it is a plain GET form, so it works without JavaScript',
+  );
   await ctx.close();
 }
 

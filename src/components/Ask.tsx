@@ -90,6 +90,18 @@ export default function Ask({ facts, total, openers }: Props) {
   useEffect(() => {
     chatId.current =
       globalThis.crypto?.randomUUID?.() ?? `c-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    /*
+     * A question can arrive in the URL, which is how the box at the foot of a
+     * case study works: it is a plain GET form, so it needs no JavaScript of
+     * its own and the link is shareable. Asked once, then cleared from the
+     * address bar so a refresh does not spend another call.
+     */
+    const asked = new URLSearchParams(location.search).get('q');
+    if (asked?.trim()) {
+      history.replaceState(null, '', location.pathname);
+      send(asked.trim());
+    }
   }, []);
 
   useEffect(() => {

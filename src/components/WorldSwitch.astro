@@ -10,7 +10,7 @@ import { meta } from '../content/meta';
  */
 
 interface Props {
-  current: 'story' | 'work';
+  current: 'story' | 'work' | 'ask';
   /** Appended after the world, for pages inside one — a case study name. */
   trail?: string;
 }
@@ -27,6 +27,19 @@ const { current, trail } = Astro.props;
     </a>
     <a class="worlds__link" href="/work" aria-current={current === 'work' ? 'page' : undefined}>
       The work
+    </a>
+
+    {/*
+      Third, and marked, because it is the one people do not expect to be
+      there. A link that reads the same as the other two gets scanned past;
+      this one has to be noticed to be used at all.
+    */}
+    <a
+      class="worlds__link worlds__link--ask"
+      href="/ask"
+      aria-current={current === 'ask' ? 'page' : undefined}
+    >
+      Ask
     </a>
   </span>
 
@@ -90,6 +103,47 @@ const { current, trail } = Astro.props;
   .worlds__link[aria-current='page'] {
     color: var(--ink);
     border-bottom-color: var(--accent);
+  }
+
+  /*
+   * Carries a dot, so the eye lands on it. The other two are places on the
+   * site and read as navigation; this one is a thing you can do, and it is
+   * new enough that nobody is looking for it.
+   */
+  .worlds__link--ask {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.45em;
+    color: var(--ink);
+  }
+
+  .worlds__link--ask::before {
+    content: '';
+    width: 0.44em;
+    height: 0.44em;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes worlds-ping {
+      0%,
+      70%,
+      100% {
+        opacity: 1;
+      }
+      85% {
+        opacity: 0.25;
+      }
+    }
+
+    .worlds__link--ask::before {
+      animation: worlds-ping 3.5s ease-in-out infinite;
+    }
+  }
+
+  .worlds__link--ask:hover {
+    color: var(--accent);
   }
 
   .worlds__trail {
