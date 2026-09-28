@@ -10,7 +10,11 @@ import WorldSwitch from '../components/WorldSwitch.astro';
 import { meta } from '../content/meta';
 ---
 
-<Story world="story">
+<Story
+  world="story"
+  title="The story — Yazan Ali"
+  description="Six years from a university cutoff score in Latakia to senior engineer in Dubai, and still no degree."
+>
   <header class="masthead u-shell--story">
     <WorldSwitch current="story" />
     <span class="masthead__role">{meta.role}, {meta.location}</span>

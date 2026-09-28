@@ -5,8 +5,14 @@ export const meta = {
   email: 'yazan.ali.dev@gmail.com',
   linkedin: 'https://www.linkedin.com/in/yazan-ali/',
   github: 'https://github.com/Yazan-Ali-01',
-  title: 'Yazan Ali — Software Engineer',
-  description: `They gave me electrical engineering. I took computer science anyway.`,
+  /*
+   * These two are the search result, not the page. The gate keeps its own
+   * headline; this is the line a recruiter scans in a list of ten results, so
+   * it has to carry seniority, the span of the work, the stack and the city.
+   * The previous description read well on the page and said none of those.
+   */
+  title: 'Yazan Ali — Senior Software Engineer, Dubai',
+  description: `Senior full-stack engineer in Dubai. I build web products end to end, from React and Next.js frontends to multi-tenant NestJS and PostgreSQL backends.`,
   lang: 'en',
   /** Taken from the existing site's structured data. Change if the domain moves. */
   siteUrl: 'https://www.yazan-ali.net',
