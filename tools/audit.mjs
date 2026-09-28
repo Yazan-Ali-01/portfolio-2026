@@ -228,6 +228,19 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
   await page.goto(BASE + '/', { waitUntil: 'domcontentloaded' });
   ok((await page.locator('a[href="/ask"]').count()) >= 1, 'the gate links to it too');
 
+  /*
+   * The field takes focus on a pointer device, because the page is one field
+   * and a visitor should be able to type on arrival. It used to paint a fake
+   * blinking caret instead, which read as focused and was not.
+   */
+  await page.goto(BASE + '/ask', { waitUntil: 'networkidle' });
+  await page.waitForTimeout(700);
+  ok(
+    await page.evaluate(() => document.activeElement?.id === 'ask-input'),
+    'the question field takes focus on a pointer device',
+  );
+  ok((await page.locator('.qa__caret').count()) === 0, 'and paints no caret of its own');
+
   await page.goto(BASE + '/work/driven', { waitUntil: 'domcontentloaded' });
   const box = page.locator('form[action="/ask"] input[name="q"]');
   ok((await box.count()) === 1, 'a case study ends with a question box');

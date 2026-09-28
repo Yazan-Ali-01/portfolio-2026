@@ -977,41 +977,6 @@ body {
   font-size: var(--text-base);
 }
 
-/* A caret of our own while the field is empty and unfocused: the browser's
-   only appears once you are already in, which is too late to invite you. */
-.qa__caret {
-  color: var(--accent);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes qa-blink {
-    50% {
-      opacity: 0;
-    }
-  }
-
-  .qa__caret {
-    animation: qa-blink 1.1s steps(1) infinite;
-  }
-}
-
-.qa__form:focus-within .qa__caret,
-.qa__form.is-typed .qa__caret {
-  display: none;
-}
-
-.qa__input::placeholder {
-  color: var(--ink-faint);
-}
-
-.qa__input:focus-visible {
-  outline: none;
-}
-
-.qa__form:focus-within {
-  border-top-color: var(--accent);
-}
-
 .qa__send {
   min-height: 40px;
   padding: 0 var(--space-sm);

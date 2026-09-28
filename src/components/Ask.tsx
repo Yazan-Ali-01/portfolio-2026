@@ -83,6 +83,7 @@ export default function Ask({ facts, total, openers }: Props) {
   const [draft, setDraft] = useState('');
   const chatId = useRef('');
   const scroller = useRef<HTMLDivElement>(null);
+  const field = useRef<HTMLInputElement>(null);
   /** The fact a reader is pointing at, and the one they opened to read. */
   const [hot, setHot] = useState('');
   const [open, setOpen] = useState('');
@@ -101,6 +102,19 @@ export default function Ask({ facts, total, openers }: Props) {
     if (asked?.trim()) {
       history.replaceState(null, '', location.pathname);
       send(asked.trim());
+    }
+
+    /*
+     * Focus where there is a real pointer. The whole page is one field, so a
+     * visitor on a laptop should be able to type the moment it loads. Not on
+     * touch: autofocus there throws the keyboard up over the page before
+     * anyone has read what this thing is or that it is not him.
+     *
+     * preventScroll, or focusing drags the viewport to the bottom of the page
+     * past the heading that explains it.
+     */
+    if (window.matchMedia('(pointer: fine)').matches) {
+      field.current?.focus({ preventScroll: true });
     }
   }, []);
 
@@ -334,12 +348,8 @@ export default function Ask({ facts, total, openers }: Props) {
         <span class="qa__prompt" aria-hidden="true">
           Ask
         </span>
-        {!draft && !busy && (
-          <span class="qa__caret" aria-hidden="true">
-            ▌
-          </span>
-        )}
         <input
+          ref={field}
           id="ask-input"
           class="qa__input"
           value={draft}
