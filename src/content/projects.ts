@@ -51,7 +51,7 @@ export const projects: Project[] = [
     name: 'Driven Properties',
     proposition: 'A property search that did not filter, rebuilt around one canonical hierarchy.',
     role: 'Senior engineer, rebuild lead',
-    period: '2024–present',
+    period: '2024–26',
     status: 'Live in production',
     liveUrl: 'https://www.drivenproperties.com/properties-for-sale-in-dubai',
     artifact: {

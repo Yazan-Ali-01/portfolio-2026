@@ -3,7 +3,7 @@ project: driven
 title: 'Rebuilding a property search that did not filter'
 lede: 'The filtering on a Dubai real estate portal was not working at all. The URLs had no consistent hierarchy, the filtering logic was split across three mechanisms, and the data lived in two disconnected places.'
 role: 'Senior engineer, rebuild lead'
-period: '2024–present'
+period: '2024–26'
 stack: ['Next.js', 'TypeScript', 'SSR', 'Layered caching', 'Headless CMS']
 status: 'Live in production'
 liveUrl: 'https://www.drivenproperties.com/properties-for-sale-in-dubai'

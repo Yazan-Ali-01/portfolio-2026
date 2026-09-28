@@ -37,7 +37,7 @@ export const work: WorkBlock[] = [
   {
     id: 'driven',
     org: 'Driven | Forbes Global Properties',
-    period: '2024–present',
+    period: '2024–26',
     body: `Property search was broken, and the trail led to two competing sources of truth: location paths pulling one way, query refinements pulling another. I replaced both with a single contract. Organic sessions to search pages climbed 7% inside three weeks. I also designed the canonical, SEO-first URL hierarchy for Dubai real estate, mapping inventory cleanly from city right down to sub-community and killing off the duplicate paths. Core listing pages moved up two full pages in Google within the first month.`,
     claims: [
       {
