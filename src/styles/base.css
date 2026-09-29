@@ -977,6 +977,16 @@ body {
   font-size: var(--text-base);
 }
 
+/*
+ * No ring of its own. The wrapper takes the accent border on :focus-within,
+ * so focus is already shown, and the global ring drew a second rectangle
+ * nested inside the first. This is only safe because that border exists:
+ * every other focusable thing on the page keeps its ring.
+ */
+.qa__input:focus-visible {
+  outline: none;
+}
+
 .qa__send {
   min-height: 40px;
   padding: 0 var(--space-sm);

@@ -241,6 +241,20 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
   );
   ok((await page.locator('.qa__caret').count()) === 0, 'and paints no caret of its own');
 
+  /*
+   * One focus indicator, not two. The wrapper takes the accent border, so the
+   * input's own ring only ever drew a second rectangle inside the first.
+   */
+  const rings = await page.evaluate(() => ({
+    input: getComputedStyle(document.querySelector('.qa__input')).outlineStyle,
+    form: getComputedStyle(document.querySelector('.qa__form')).borderTopColor,
+  }));
+  ok(rings.input === 'none', `the field draws no ring of its own (${rings.input})`);
+  ok(
+    rings.form === 'rgb(139, 92, 246)',
+    `the wrapper shows the focus instead (${rings.form})`,
+  );
+
   await page.goto(BASE + '/work/driven', { waitUntil: 'domcontentloaded' });
   const box = page.locator('form[action="/ask"] input[name="q"]');
   ok((await box.count()) === 1, 'a case study ends with a question box');
