@@ -1,6 +1,7 @@
 ---
 import Story from '../layouts/Story.astro';
 import { contact, copy, wall, whatsappHref } from '../content/hi';
+import { intro } from '../content/intro';
 import { stack, stackNames } from '../content/stack';
 import { meta } from '../content/meta';
 import { MAX_MESSAGE, MAX_NAME } from '../lib/hi-text';
@@ -35,12 +36,48 @@ const STORY_URL = '/story';
   <main>
    <div class="hi">
     {/*
-      Ships as "You scanned the shirt." and stays that way for a reader with no
-      JavaScript, a blocked request or a cold endpoint. When the number does
-      arrive it replaces the sentence in place, which is why the fallback is a
-      full sentence rather than a label waiting to be filled in.
+      The sentence and the face share a row, because the face has to cost the
+      first screen almost nothing: this line already reserves two lines' worth
+      of height for the count, and the 64px portrait sits inside most of it.
+
+      It goes here rather than beside the name because the name block runs the
+      full column; squeezing a circle in next to it would rewrap the role line
+      and the stack rows, which is height this screen does not have.
     */}
-    <p class="hi__from"><span data-scan-line>{wall.fallback}</span></p>
+    <div class="hi__head">
+      {/*
+        Ships as "You scanned the shirt." and stays that way for a reader with
+        no JavaScript, a blocked request or a cold endpoint. When the number
+        does arrive it replaces the sentence in place, which is why the
+        fallback is a full sentence rather than a label waiting to be filled
+        in.
+      */}
+      <p class="hi__from"><span data-scan-line>{wall.fallback}</span></p>
+
+      {/*
+        Labelled, not just a face with a triangle on it. A portrait reads as a
+        portrait first, and nobody taps a photograph of a stranger to find out
+        what happens. The hidden span is the rest of the sentence a screen
+        reader hears, so the accessible name still starts with the word on
+        screen.
+      */}
+      <button class="hi__face" type="button" data-intro-open>
+        {/* One line, because Astro would eat the space around a line break. */}
+        <span class="hi__facelabel">Watch <span class="u-visually-hidden">my video introduction, </span>{intro.duration}</span>
+
+        {/*
+          Round because it has to be: the frame was rotated level to straighten
+          his head, which left the corners of the file black.
+        */}
+        <span class="hi__facering">
+          <img class="hi__facepic" src={intro.poster} alt="" width="64" height="64" />
+          <svg class="hi__facemark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="12" fill="var(--accent)" />
+            <path d="M9.5 7.5 L17 12 L9.5 16.5 Z" fill="var(--ground)" />
+          </svg>
+        </span>
+      </button>
+    </div>
 
     <div class="hi__id">
       <h1 class="hi__name">{meta.name}</h1>
@@ -115,6 +152,17 @@ const STORY_URL = '/story';
    </div>
 
    {/*
+     The player opens over the page rather than in it. Every row of the first
+     screen is load-bearing and there is nowhere to put a 9:16 frame without
+     moving the contact card out from under a thumb already aimed at it.
+     Closing puts the reader back on that card rather than on a back button.
+   */}
+   <dialog class="film" data-intro-dialog aria-label="Video introduction">
+     <div class="film__body" data-intro-slot></div>
+     <button class="film__close" type="button" data-intro-close>Close</button>
+   </dialog>
+
+   {/*
      Hidden in the markup and revealed only once the endpoint has answered.
      Failure therefore looks like the page always did rather than like a broken
      section, which matters more here than on any other page on the site.
@@ -172,7 +220,9 @@ const STORY_URL = '/story';
 
 <script>
   import { initHiWall } from '../scripts/hi-wall';
+  import { initIntroFilm } from '../scripts/intro';
   initHiWall();
+  initIntroFilm();
 </script>
 
 <style>
@@ -190,8 +240,63 @@ const STORY_URL = '/story';
     padding: clamp(1.5rem, 6vw, 2.5rem);
   }
 
+  .hi__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+  }
+
+  .hi__face {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: var(--text-xs);
+    color: var(--ink-muted);
+    cursor: pointer;
+  }
+
+  .hi__facelabel {
+    white-space: nowrap;
+  }
+
+  /*
+   * 64px: past the 44px the rest of this page holds to, and still the
+   * shortest row on the screen.
+   */
+  .hi__facering {
+    position: relative;
+    display: block;
+    flex: none;
+    width: 64px;
+    height: 64px;
+  }
+
+  .hi__facepic {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+  }
+
+  /* Overlapping the portrait, so the two read as one object. */
+  .hi__facemark {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    width: 22px;
+    height: 22px;
+  }
+
   .hi__from {
     margin: 0;
+    flex: 1;
     font-size: var(--text-xs);
     color: var(--accent);
     /*
@@ -672,5 +777,48 @@ const STORY_URL = '/story';
     margin: var(--space-lg) 0 0;
     font-size: var(--text-xs);
     color: var(--ink-faint);
+  }
+
+  /* --- the player, over the page ----------------------------------------- */
+
+  .film {
+    width: min(92vw, 22rem);
+    padding: 0;
+    border: 1px solid var(--line);
+    background: var(--ground);
+    color: var(--ink);
+  }
+
+  .film::backdrop {
+    background: rgba(14, 17, 22, 0.88);
+  }
+
+  .film__body {
+    aspect-ratio: 9 / 16;
+    background: var(--ground-raise);
+  }
+
+  /* :global, because the player is built by the script and never stamped. */
+  .film__body :global(.intro__frame) {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  /*
+   * Full width and a thumb's height. Escape and the backdrop both close this
+   * too, but neither is discoverable on a phone.
+   */
+  .film__close {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    border: 0;
+    border-top: 1px solid var(--line);
+    background: var(--ground-raise);
+    color: var(--ink);
+    font: inherit;
+    cursor: pointer;
   }
 </style>
