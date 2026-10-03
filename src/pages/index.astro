@@ -2,6 +2,7 @@
 import Story from '../layouts/Story.astro';
 import { meta } from '../content/meta';
 import { projects } from '../content/projects';
+import Intro from '../components/Intro.astro';
 
 /**
  * The gate (E08). Two ways in.
@@ -26,10 +27,26 @@ import { projects } from '../content/projects';
         Two lines, not one, because the sentence turns between them. The
         entrance below gives that turn its own beat.
       */}
-      <h1 class="statement u-shell--story">
-        <span>They gave me electrical engineering.</span>
-        <span class="statement__turn">I took computer science anyway.</span>
-      </h1>
+      {/*
+        The statement is capped at 23 characters wide, which left the right
+        half of this band empty at every width above a tablet. The video is
+        9:16 and fills it exactly.
+      */}
+      <div class="gate__intro u-shell--story">
+        <h1 class="statement">
+          <span>They gave me electrical engineering.</span>
+          <span class="statement__turn">I took computer science anyway.</span>
+        </h1>
+
+        {/*
+          Wrapped, because a class handed to a child component keeps the
+          child's scope and not this page's: `.gate__video` on the figure
+          itself never matched, and the poster rendered at full column width.
+        */}
+        <div class="gate__video">
+          <Intro />
+        </div>
+      </div>
     </div>
 
     <div class="doors">
@@ -165,10 +182,39 @@ import { projects } from '../content/projects';
     color: var(--ink-muted);
   }
 
+  .gate__intro {
+    display: grid;
+    gap: var(--space-md);
+    align-items: center;
+  }
+
+  /* Side by side only where there is room for both to be themselves. */
+  @media (min-width: 60rem) {
+    .gate__intro {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: var(--space-xl);
+    }
+  }
+
   .statement {
     font-size: var(--text-hero);
     max-width: 23ch;
     margin: 0;
+  }
+
+  /*
+   * Sized by eye, not by performance. Measured against a production build the
+   * poster costs about 260ms of LCP whatever width it is drawn at, because it
+   * is the same 13KB file either way.
+   */
+  .gate__video {
+    max-width: 13rem;
+  }
+
+  @media (min-width: 60rem) {
+    .gate__video {
+      max-width: 15rem;
+    }
   }
 
   .statement span {

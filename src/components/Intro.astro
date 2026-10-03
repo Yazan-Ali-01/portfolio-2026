@@ -1,0 +1,148 @@
+---
+/**
+ * The video introduction, as a panel: a poster and a play button, with the
+ * iframe built only once someone asks for it. Why it is built rather than
+ * embedded is in scripts/intro.ts, which does the building.
+ *
+ * The portrait is a frame of the video itself, pulled from the Mux thumbnail
+ * endpoint behind the player and served from here rather than hotlinked, so
+ * the page still makes no third-party request before play.
+ */
+import { intro } from '../content/intro';
+
+interface Props {
+  /** Extra class for the page placing it. */
+  class?: string;
+}
+
+const { class: extra } = Astro.props;
+---
+
+<figure class:list={['intro', extra]}>
+  <button
+    class="intro__play"
+    type="button"
+    data-intro-panel
+    aria-label={`Play the video introduction, ${intro.duration}`}
+  >
+    {/*
+      Drawn, not a video still. A still carried the room behind him and a
+      burned-in caption repeating the page, and any grade of it was still a
+      bright rectangle on a dark page. Only the portrait is photographic.
+
+      Inline, so it is part of the HTML: no image request at all, nothing to
+      lazy-load, and it paints when the document does. The grid is the gate's
+      own grid, at the gate's own spacing.
+    */}
+    <svg class="intro__art" viewBox="0 0 360 640" role="img" aria-hidden="true">
+      <defs>
+        <pattern id="introGrid" width="45" height="45" patternUnits="userSpaceOnUse">
+          <path d="M45 0H0V45" fill="none" stroke="var(--line)" stroke-width="1" />
+        </pattern>
+        <radialGradient id="introGlow" cx="50%" cy="38%" r="62%">
+          <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.22" />
+          <stop offset="100%" stop-color="var(--accent)" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <rect width="360" height="640" fill="var(--ground)" />
+      <rect width="360" height="640" fill="url(#introGrid)" />
+      <rect width="360" height="640" fill="url(#introGlow)" />
+
+      <defs>
+        <clipPath id="introFace">
+          <circle cx="180" cy="268" r="100" />
+        </clipPath>
+      </defs>
+
+      {/*
+        Him, and nothing else. Square crop on head and shoulders, rotated
+        level, graded down so it does not glare against a near-black page,
+        and clipped to a circle so none of the room comes with it. The clip
+        is load-bearing as well as a shape: the rotation left the corners of
+        the file black.
+      */}
+      <image
+        href={intro.poster}
+        x="80"
+        y="168"
+        width="200"
+        height="200"
+        clip-path="url(#introFace)"
+        preserveAspectRatio="xMidYMid slice"
+      />
+      <circle cx="180" cy="268" r="100" fill="none" stroke="var(--line)" stroke-width="1" />
+      <circle cx="180" cy="268" r="116" fill="none" stroke="var(--accent)" stroke-width="1" opacity="0.28" />
+
+      {/* Overlapping the portrait, so the two read as one object. */}
+      <g transform="translate(256 344)">
+        <circle r="30" fill="var(--accent)" />
+        <path d="M-8 -12 L15 0 L-8 12 Z" fill="var(--ground)" />
+      </g>
+
+      <line x1="28" y1="452" x2="332" y2="452" stroke="var(--line)" stroke-width="1" />
+      <text
+        x="28"
+        y="492"
+        fill="var(--ink)"
+        font-family="var(--face-display)"
+        font-size="30"
+        font-weight="600"
+        letter-spacing="-0.8"
+      >A minute, to camera</text>
+    </svg>
+
+    <span class="intro__time" aria-hidden="true">{intro.duration}</span>
+  </button>
+</figure>
+
+<script>
+  import { initIntroPanel } from '../scripts/intro';
+  initIntroPanel();
+</script>
+
+<style>
+  /*
+   * No width of its own. The page placing it decides how big it should be,
+   * and when this set its own max-width the gate's override lost on source
+   * order, leaving a 270px poster where a 144px one was intended.
+   */
+  .intro {
+    margin: 0;
+    width: 100%;
+  }
+
+  .intro__play,
+  .intro__frame {
+    display: block;
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    border: 1px solid var(--line);
+    background: var(--ground-raise);
+  }
+
+  .intro__play {
+    position: relative;
+    padding: 0;
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  .intro__art {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .intro__time {
+    position: absolute;
+    right: var(--space-xs);
+    bottom: var(--space-xs);
+    padding: 0.15rem 0.4rem;
+    background: rgba(11, 11, 12, 0.76);
+    color: var(--ink);
+    font-family: var(--face-data, var(--face-meta));
+    font-size: var(--text-xs);
+  }
+
+</style>
