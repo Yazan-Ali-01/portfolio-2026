@@ -57,13 +57,25 @@ const STORY_URL = '/story';
       {/*
         Labelled, not just a face with a triangle on it. A portrait reads as a
         portrait first, and nobody taps a photograph of a stranger to find out
-        what happens. The hidden span is the rest of the sentence a screen
-        reader hears, so the accessible name still starts with the word on
-        screen.
+        what happens.
+
+        "hear me out" because it is the only thing on this page with a voice,
+        and because the player opens silent until it is pressed.
+
+        An aria-label rather than a hidden span: stitching one out of the two
+        visible lines left a stray space before the comma. It still opens with
+        the words on screen, which is what keeps voice control working.
       */}
-      <button class="hi__face" type="button" data-intro-open>
-        {/* One line, because Astro would eat the space around a line break. */}
-        <span class="hi__facelabel">Watch <span class="u-visually-hidden">my video introduction, </span>{intro.duration}</span>
+      <button
+        class="hi__face"
+        type="button"
+        data-intro-open
+        aria-label={`hear me out, my video introduction, ${intro.duration}`}
+      >
+        <span class="hi__facelabel" aria-hidden="true">
+          <span class="hi__facesay">hear me out</span>
+          <span class="hi__facetime">{intro.duration}</span>
+        </span>
 
         {/*
           Round because it has to be: the frame was rotated level to straighten
@@ -261,8 +273,24 @@ const STORY_URL = '/story';
     cursor: pointer;
   }
 
+  /*
+   * Two lines, stacked against the portrait: the invitation, then how long it
+   * costs. Both fit inside the circle's own height, so the row does not grow.
+   */
   .hi__facelabel {
+    display: grid;
+    justify-items: end;
+    gap: 0.15em;
     white-space: nowrap;
+  }
+
+  .hi__facesay {
+    color: var(--ink);
+  }
+
+  .hi__facetime {
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
   }
 
   /*
