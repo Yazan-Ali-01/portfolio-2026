@@ -171,7 +171,17 @@ const STORY_URL = '/story';
    */}
    <dialog class="film" data-intro-dialog aria-label="Video introduction">
      <div class="film__body" data-intro-slot></div>
-     <button class="film__close" type="button" data-intro-close>Close</button>
+     {/*
+       Both ways out, side by side. The reader who opened this and then saw
+       where they are — a train, an open office — needs somewhere to go other
+       than back.
+     */}
+     <div class="film__foot">
+       <a class="film__read" href="/#transcript" data-ev="hi_action" data-ev-channel="transcript">
+         Read it instead
+       </a>
+       <button class="film__close" type="button" data-intro-close>Close</button>
+     </div>
    </dialog>
 
    {/*
@@ -835,18 +845,31 @@ const STORY_URL = '/story';
   }
 
   /*
-   * Full width and a thumb's height. Escape and the backdrop both close this
-   * too, but neither is discoverable on a phone.
+   * A thumb's height each. Escape and the backdrop both close this too, but
+   * neither is discoverable on a phone.
    */
+  .film__foot {
+    display: flex;
+    border-top: 1px solid var(--line);
+  }
+
+  .film__read,
   .film__close {
-    display: block;
-    width: 100%;
+    display: grid;
+    flex: 1;
+    place-items: center;
     min-height: 44px;
     border: 0;
-    border-top: 1px solid var(--line);
     background: var(--ground-raise);
     color: var(--ink);
     font: inherit;
+    font-size: var(--text-sm);
     cursor: pointer;
+  }
+
+  .film__read {
+    border-right: 1px solid var(--line);
+    color: var(--ink-muted);
+    text-decoration: none;
   }
 </style>

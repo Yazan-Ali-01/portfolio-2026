@@ -3,6 +3,7 @@ import Story from '../layouts/Story.astro';
 import { meta } from '../content/meta';
 import { projects } from '../content/projects';
 import Intro from '../components/Intro.astro';
+import { intro, transcript, embedSrc } from '../content/intro';
 
 /**
  * The gate (E08). Two ways in.
@@ -13,6 +14,24 @@ import Intro from '../components/Intro.astro';
  * Each door sets its own `data-world`, so it renders in the palette and
  * typography of the place it leads to. The choice is visible before it is made.
  */
+
+/**
+ * The video, declared. `uploadDate` is missing on purpose: Mux exposes no
+ * creation date for the asset and Google would rather have nothing than a
+ * guess. Add it here when the real one is known and the video becomes
+ * eligible for a rich result.
+ */
+const videoSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'VideoObject',
+  name: `${meta.name} — ${intro.title}`,
+  description: 'A one-minute video introduction: who he is, what he builds, and what he is looking for next.',
+  thumbnailUrl: `${meta.siteUrl}${intro.poster}`,
+  duration: intro.iso,
+  embedUrl: embedSrc,
+  transcript: transcript.join('\n\n'),
+  author: { '@type': 'Person', name: meta.name, url: meta.siteUrl },
+};
 ---
 
 <Story world="gate">
@@ -47,7 +66,33 @@ import Intro from '../components/Intro.astro';
           <Intro />
         </div>
       </div>
+
+      {/*
+        Shut, and quiet about it. It is here for the person who will not play a
+        video — on a train, in an open office, or because a video is a worse
+        way to read — and for the fact that two hundred words of him describing
+        his own work are otherwise locked inside a third-party player where no
+        crawler can reach them.
+      */}
+      <details class="said u-shell--story" id="transcript">
+        <summary class="said__cue">Read it instead</summary>
+        {transcript.map((para) => <p class="said__p">{para}</p>)}
+      </details>
     </div>
+
+    <script type="application/ld+json" set:html={JSON.stringify(videoSchema)} is:inline />
+
+    <script>
+      /*
+       * /hi sends people here for the transcript. A fragment that lands on a
+       * shut disclosure shows them nothing, so arriving at it opens it.
+       */
+      const said = document.getElementById('transcript');
+      if (!(said instanceof HTMLDetailsElement)) {
+        throw new Error('gate: #transcript is not a details, but /hi links to it');
+      }
+      if (location.hash === '#transcript') said.open = true;
+    </script>
 
     <div class="doors">
       <a class="door" data-world="story" href="/story" data-ev="gate_choice" data-ev-door="story">
@@ -215,6 +260,42 @@ import Intro from '../components/Intro.astro';
     .gate__video {
       max-width: 15rem;
     }
+  }
+
+  /*
+   * The transcript. Deliberately the quietest thing on the page: it must be
+   * findable by someone who wants it and invisible to everyone else, and it
+   * must not read as a third door.
+   */
+  /*
+   * The width lives on the paragraphs, not here. `u-shell--story` is on this
+   * element and centres itself with auto margins, so a max-width here does not
+   * narrow the column — it floats the whole block into the middle of the page.
+   */
+  .said {
+    margin-top: var(--space-md);
+  }
+
+  .said__cue {
+    /* Padded to 24px, like every other standalone target on the site. */
+    display: inline-block;
+    padding: 0.3rem 0;
+    color: var(--ink-muted);
+    font-family: var(--face-meta);
+    font-size: var(--text-xs);
+    cursor: pointer;
+  }
+
+  .said__cue:hover {
+    color: var(--ink);
+  }
+
+  .said__p {
+    margin: var(--space-xs) 0 0;
+    max-width: 52ch;
+    color: var(--ink-muted);
+    font-size: var(--text-sm);
+    line-height: 1.7;
   }
 
   .statement span {

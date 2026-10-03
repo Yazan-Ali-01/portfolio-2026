@@ -212,6 +212,14 @@ export const about: Fact[] = [
     text: `He stopped Complytude on purpose after validating the idea and finding it did not hold. Looking into the regulations showed it needed a partnership with a legal firm, which does not fit the direction he is taking. He had already proven the architecture he set out to prove. It is not an unfinished project he drifted away from; it is one he chose to stop.`,
     source: { label: 'Complytude', href: '/work/complytude' },
   },
+
+  // --- him, on camera, so the bot can hand the question back to him -------
+  {
+    id: 'video',
+    topic: 'in his own words',
+    text: `There is a seventy-one second video introduction on the home page, with a transcript beside it. In it he describes himself as a self-taught software engineer in Dubai with around six years of experience building web applications and scalable products, working mainly in TypeScript, Node.js, React, Next.js and NestJS, and most of his experience being building products from requirements to production. He says he enjoys being hands-on, taking ownership of systems, discussing technical decisions and working closely with engineers, and that at this stage he is looking to join a strong engineering team where he can contribute to real products, take ownership and learn from other engineers. It is the one place on the site where the answer is in his own voice rather than someone else's summary of him.`,
+    source: { label: 'Watch it', href: '/#transcript' },
+  },
 ];
 
 /** Flat list of ids, so the prompt can tell the model exactly what it may cite. */
