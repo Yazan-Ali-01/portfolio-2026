@@ -107,6 +107,33 @@ for (const w of [390, 600, 768, 1024, 1280, 1440, 1920]) {
   await ctx.close();
 }
 
+// --- 3b2. The player takes the shape the poster left ------------------------
+{
+  /*
+   * The player is built by a script, so it never carries the Intro component's
+   * scope attribute and any scoped rule written for it silently does nothing.
+   * That shipped once: the iframe fell back to the browser's 300x150 default
+   * and showed a vertical video letterboxed in a landscape box.
+   *
+   * Measured rather than asserted about the CSS, and without waiting for the
+   * embed: the box is settled by stylesheet, not by load.
+   */
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  await blockAnalytics(ctx);
+  const page = await ctx.newPage();
+  await page.route(/viddler\.com/, (r) => r.abort());
+  await page.goto(BASE + '/', { waitUntil: 'networkidle' });
+  const poster = await page.locator('.intro__play').boundingBox();
+  await page.locator('.intro__play').click();
+  const player = await page.locator('.intro__frame').boundingBox();
+  console.log('\nThe video panel');
+  ok(
+    Math.abs(player.width - poster.width) < 2 && Math.abs(player.height - poster.height) < 2,
+    `the player takes the shape the poster left (${player.width.toFixed(0)}x${player.height.toFixed(0)} for ${poster.width.toFixed(0)}x${poster.height.toFixed(0)})`,
+  );
+  await ctx.close();
+}
+
 // --- 3c. No analytics off the production host -------------------------------
 {
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });

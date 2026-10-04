@@ -112,20 +112,33 @@ const { class: extra } = Astro.props;
     width: 100%;
   }
 
-  .intro__play,
-  .intro__frame {
+  .intro__play {
+    display: block;
+    position: relative;
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    padding: 0;
+    border: 1px solid var(--line);
+    background: var(--ground-raise);
+    cursor: pointer;
+    overflow: hidden;
+  }
+
+  /*
+   * :global, because the player is built by the script and so never carries
+   * this component's scope attribute. Written scoped, the rule matched nothing
+   * and the iframe fell back to the browser's own 300x150 default: a landscape
+   * box with a vertical video letterboxed inside it.
+   *
+   * Anchored to the figure so the escape hatch stays narrow — it cannot reach
+   * an iframe anywhere else on the page.
+   */
+  .intro :global(.intro__frame) {
     display: block;
     width: 100%;
     aspect-ratio: 9 / 16;
     border: 1px solid var(--line);
     background: var(--ground-raise);
-  }
-
-  .intro__play {
-    position: relative;
-    padding: 0;
-    cursor: pointer;
-    overflow: hidden;
   }
 
   .intro__art {
